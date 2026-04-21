@@ -1,0 +1,1830 @@
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5; color: #333; font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .loading-screen {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100vh; background: #fff;
+    }
+    .spinner {
+      border: 4px solid #e5e7eb; border-top: 4px solid #6b7280;
+      border-radius: 50%; width: 44px; height: 44px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    .loading-screen p { margin-top: 14px; color: #6b7280; font-weight: 500; font-size: 15px; }
+
+    .page { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+    .page.show { display: flex; }
+
+    .topbar {
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      padding: 12px 24px; display: flex; align-items: center;
+      justify-content: space-between; gap: 16px; flex-shrink: 0;
+    }
+    .topbar-title    { font-size: 16px; font-weight: 700; color: #1f2937; letter-spacing: -0.3px; }
+    .topbar-subtitle { font-size: 12px; color: #9ca3af; }
+
+    .stats-row {
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      padding: 8px 24px; display: flex; gap: 24px; flex-wrap: wrap;
+      flex-shrink: 0; align-items: center;
+    }
+    .stat-item  { display: flex; flex-direction: column; }
+    .stat-value { font-size: 18px; font-weight: 700; color: #1f2937; line-height: 1.2; }
+    .stat-label { font-size: 11px; color: #9ca3af; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+    .stat-divider { width: 1px; background: #e5e7eb; align-self: stretch; margin: 2px 0; }
+
+    .filter-bar {
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      padding: 8px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .filter-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
+    .filter-select {
+      padding: 5px 8px; border: 1.5px solid #e5e7eb; border-radius: 6px;
+      font-size: 12px; color: #374151; background: #f9fafb; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .filter-select:focus { outline: none; border-color: #6b7280; }
+    .search-input {
+      padding: 5px 8px; border: 1.5px solid #e5e7eb; border-radius: 6px;
+      font-size: 12px; color: #374151; background: #f9fafb; min-width: 380px;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { outline: none; border-color: #6b7280; }
+    .btn-clear {
+      padding: 5px 12px; border: 1.5px solid #d1d5db; border-radius: 6px;
+      font-size: 12px; font-weight: 500; color: #6b7280; background: #fff;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-clear:hover { background: #f3f4f6; color: #374151; }
+    .result-count { font-size: 12px; color: #9ca3af; margin-left: auto; white-space: nowrap; }
+
+    .table-wrap { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
+
+    table { border-collapse: separate; border-spacing: 0; font-size: 12px; min-width: max-content; }
+
+    thead tr.group-row th {
+      background: #1f2937; color: #fff;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+      padding: 0 12px; height: 34px; text-align: center; white-space: nowrap;
+      border-right: 1px solid #374151;
+      position: sticky; top: 0; z-index: 50;
+    }
+    thead tr.group-row th.sg1 { position: sticky; left: 0;     top: 0; z-index: 90; text-align: left; background: #1f2937; }
+    thead tr.group-row th.sg2 { position: sticky; left: 315px; top: 0; z-index: 90; text-align: left; background: #1f2937; border-right: 2px solid #4b5563; }
+    thead tr.group-row th.sec { border-left: 2px solid #4b5563; }
+
+    thead tr.field-row th {
+      background: #f3f4f6; color: #374151;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+      padding: 0 12px; height: 34px; text-align: left; white-space: nowrap;
+      border-bottom: 2px solid #d1d5db; border-right: 1px solid #e5e7eb;
+      position: sticky; top: 34px; z-index: 50;
+    }
+    thead tr.field-row th.sf1 { position: sticky; left: 0;     top: 34px; z-index: 80; background: #f3f4f6; }
+    thead tr.field-row th.sf2 {
+      position: sticky; left: 315px; top: 34px; z-index: 80; background: #f3f4f6;
+      box-shadow: 3px 0 6px -2px rgba(0,0,0,0.10); border-right: 2px solid #d1d5db;
+    }
+    thead tr.field-row th.ss { border-left: 2px solid #d1d5db; }
+
+    tbody td {
+      padding: 9px 12px; border-bottom: 1px solid #f3f4f6; border-right: 1px solid #f3f4f6;
+      vertical-align: middle; color: #1f2937; background: #fff;
+      white-space: nowrap;
+    }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: #f0f4ff; }
+    tbody tr:hover td.sb1,
+    tbody tr:hover td.sb2 { background: #e8eeff; }
+
+    tbody td.lic-cell { white-space: normal; width: 125px; min-width: 125px; max-width: 125px; }
+    thead tr.field-row th.lic-th { min-width: 125px; width: 125px; }
+
+    tbody td.sb1 {
+      position: sticky; left: 0; z-index: 10;
+      background: #fff; font-weight: 600; border-right: none;
+      width: 315px; min-width: 315px; max-width: 315px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    tbody td.sb2 {
+      position: sticky; left: 315px; z-index: 10;
+      background: #fff; box-shadow: 3px 0 6px -2px rgba(0,0,0,0.10);
+      border-right: 2px solid #e5e7eb;
+      width: 100px; min-width: 100px; max-width: 100px;
+    }
+    tbody td.ss { border-left: 2px solid #e5e7eb; }
+
+    .desig-badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap;
+    }
+    .desig-tech      { background: #e0f2fe; color: #0369a1; }
+    .desig-tech-a    { background: #dcfce7; color: #15803d; }
+    .desig-lead-tech { background: #d1fae5; color: #065f46; }
+    .desig-ms        { background: #fef3c7; color: #92400e; }
+    .desig-lae-b1    { background: #ede9fe; color: #5b21b6; }
+    .desig-lae-b2    { background: #fce7f3; color: #9d174d; }
+    .desig-le        { background: #dbeafe; color: #1d4ed8; }
+    .desig-le-ops    { background: #e0e7ff; color: #3730a3; }
+    .desig-mgr       { background: #f1f5f9; color: #334155; }
+    .desig-other     { background: #f3f4f6; color: #6b7280; }
+
+    .exp-badge {
+      display: inline-flex; align-items: center; padding: 2px 6px;
+      border-radius: 8px; font-size: 10px; font-weight: 600; white-space: nowrap;
+    }
+    .exp-badge.expired  { background: #fee2e2; color: #dc2626; }
+    .exp-badge.critical { background: #ffedd5; color: #ea580c; }
+    .exp-badge.warning  { background: #fef9c3; color: #ca8a04; }
+    .exp-badge.ok       { background: #dcfce7; color: #16a34a; }
+
+    .doc-link {
+      display: inline-flex; align-items: center;
+      color: #374151; text-decoration: none; padding: 2px;
+      transition: opacity 0.15s;
+    }
+    .doc-link:hover { opacity: 0.55; }
+    .doc-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+    .vm-btn {
+      background: none; border: none; padding: 0; margin: 0; cursor: pointer;
+      font-size: 11px; font-weight: 400; color: #374151;
+      font-family: inherit; text-decoration: underline; text-decoration-color: transparent;
+      transition: font-weight 0.05s, text-decoration-color 0.15s;
+    }
+    .vm-btn:hover { font-weight: 700; text-decoration-color: #374151; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 3px; }
+    .chip {
+      display: inline-flex; padding: 1px 6px; border-radius: 8px;
+      font-size: 10px; font-weight: 500;
+      background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; white-space: nowrap;
+    }
+    .chip.hl { background: #374151; color: #fff; border-color: #374151; }
+
+    .no-data { padding: 60px 24px; text-align: center; color: #9ca3af; font-size: 14px; }
+
+    .error-screen { display: none; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 12px; background: #fff; }
+    .error-screen.show { display: flex; }
+    .error-screen h2 { color: #1f2937; font-size: 18px; }
+    .error-screen p  { color: #6b7280; font-size: 13px; }
+
+    /* ── Base Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 1000;
+      justify-content: center; align-items: center; padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 12px;
+      width: 100%; max-width: 520px; max-height: 82vh;
+      overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column;
+    }
+    .modal-header {
+      padding: 16px 20px 12px; border-bottom: 1px solid #e5e7eb;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 14px; font-weight: 700; color: #1f2937; line-height: 1.4; }
+    .modal-close {
+      background: none; border: none; font-size: 22px; color: #6b7280;
+      cursor: pointer; padding: 0 4px; line-height: 1; border-radius: 4px; flex-shrink: 0;
+    }
+    .modal-close:hover { background: #f3f4f6; color: #1f2937; }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+    .modal-section { margin-bottom: 18px; }
+    .modal-section:last-child { margin-bottom: 0; }
+    .modal-sec-title {
+      font-size: 10px; font-weight: 700; color: #fff;
+      background: #374151; padding: 3px 10px; border-radius: 4px;
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;
+    }
+    .modal-item { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; font-size: 13px; color: #1f2937; }
+    .modal-item:last-child { border-bottom: none; }
+    .modal-row { display: flex; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+    .modal-row:last-child { border-bottom: none; }
+    .modal-rl { width: 130px; flex-shrink: 0; color: #6b7280; font-weight: 500; font-size: 12px; padding-top: 1px; }
+    .modal-rv { color: #1f2937; flex: 1; word-break: break-word; white-space: normal; }
+    .modal-nil { color: #9ca3af; font-style: italic; font-size: 13px; padding: 12px 0; }
+
+    /* ── Change Modal specific ── */
+    .cm-field-card {
+      border: 1.5px solid #e5e7eb; border-radius: 8px;
+      margin-bottom: 10px; overflow: hidden; transition: border-color 0.15s;
+    }
+    .cm-field-card.active { border-color: #6366f1; }
+    .cm-field-card.status-card { border-color: #fca5a5; }
+    .cm-field-card.status-card.active { border-color: #dc2626; }
+    .cm-field-label {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f9fafb; cursor: pointer;
+      user-select: none;
+    }
+    .cm-field-card.status-card .cm-field-label { background: #fff5f5; }
+    .cm-field-label input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: #4f46e5; flex-shrink: 0; }
+    .cm-field-card.status-card .cm-field-label input[type=checkbox] { accent-color: #dc2626; }
+    .cm-field-name { font-size: 12px; font-weight: 600; color: #374151; }
+    .cm-field-card.status-card .cm-field-name { color: #dc2626; }
+    .cm-current-tag {
+      margin-left: auto; font-size: 11px; color: #9ca3af;
+      background: #f3f4f6; padding: 2px 8px; border-radius: 6px;
+      white-space: nowrap;
+    }
+    .cm-panel {
+      display: none; padding: 12px 14px;
+      border-top: 1.5px solid #e5e7eb; background: #fff;
+    }
+    .cm-field-card.status-card .cm-panel { border-top-color: #fecaca; }
+    .cm-panel.open { display: block; }
+    .cm-arrow-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .cm-from-tag {
+      font-size: 11px; font-weight: 600; color: #6b7280;
+      background: #f3f4f6; padding: 3px 10px; border-radius: 6px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .cm-arrow { color: #d1d5db; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .cm-field-card.no-change { border-color: #f59e0b; }
+    .cm-field-card.no-change .cm-panel { border-top-color: #fde68a; background: #fffbeb; }
+    .cm-no-change-hint {
+      font-size: 10px; color: #b45309; font-weight: 600;
+      margin-top: 6px; display: none;
+    }
+    .cm-no-change-hint.show { display: block; }
+    .cm-date-input {
+      padding: 5px 8px; border: 1.5px solid #e5e7eb; border-radius: 6px;
+      font-size: 12px; color: #374151; font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .cm-date-input:focus { outline: none; border-color: #6b7280; }
+    .cm-submit-btn {
+      padding: 8px 22px; background: #1f2937; color: #fff;
+      border: none; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .cm-submit-btn:hover { background: #374151; }
+    .cm-submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+    /* ── Nav ── */
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab {
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: 1.5px solid #e5e7eb; background: #fff; color: #6b7280;
+      font-family: inherit; transition: all 0.15s; white-space: nowrap;
+    }
+    .nav-tab.tab-dashboard.active { background: #1f2937; color: #fff; border-color: #1f2937; }
+    .nav-tab.tab-dashboard:not(.active):hover { background: #f3f4f6; color: #374151; }
+    .nav-tab.tab-landing { border-color: #d1d5db; color: #6b7280; }
+    .nav-tab.tab-landing:hover { background: #f3f4f6; color: #374151; border-color: #9ca3af; }
+    .nav-tab.tab-absence { border-color: #dc2626; color: #dc2626; }
+    .nav-tab.tab-absence.active { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .nav-tab.tab-absence:not(.active):hover { background: #fee2e2; }
+    .nav-tab.tab-disc { border-color: #6b7280; color: #4b5563; }
+    .nav-tab.tab-disc.active { background: #4b5563; color: #fff; border-color: #4b5563; }
+    .nav-tab.tab-disc:not(.active):hover { background: #f3f4f6; color: #1f2937; }
+
+    .abs-badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap;
+    }
+    .abs-medical     { background: #dbeafe; color: #1d4ed8; }
+    .abs-hosp        { background: #fee2e2; color: #dc2626; }
+    .abs-emergency   { background: #fef3c7; color: #92400e; }
+    .abs-quarantine  { background: #ede9fe; color: #5b21b6; }
+    .abs-other       { background: #f3f4f6; color: #6b7280; }
+
+    .disc-badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap;
+    }
+    .disc-warning    { background: #fee2e2; color: #b91c1c; }
+    .disc-reprimand  { background: #fef9c3; color: #854d0e; }
+    .disc-show-cause { background: #ffedd5; color: #9a3412; }
+    .disc-suspension { background: #fce7f3; color: #9d174d; }
+    .disc-dismissal  { background: #4c1d95; color: #fff; }
+    .disc-other      { background: #f3f4f6; color: #6b7280; }
+
+    @media (max-width: 768px) {
+      .topbar { padding: 10px 14px; gap: 10px; }
+      .topbar-title { font-size: 14px; }
+      .stats-row { padding: 6px 14px; gap: 14px; }
+      .stat-value { font-size: 15px; }
+      .filter-bar { padding: 6px 14px; gap: 6px; }
+      .search-input { min-width: 140px; }
+      thead tr.group-row th, thead tr.group-row th.sg1, thead tr.group-row th.sg2,
+      thead tr.field-row th, thead tr.field-row th.sf1, thead tr.field-row th.sf2,
+      thead tr.abs-head th, thead tr.abs-head th.sa1,
+      tbody td.sb1, tbody td.sb2, tbody td.abs-sb1 {
+        position: static !important; z-index: auto !important; box-shadow: none !important;
+      }
+      tbody td.sb1 { width: auto !important; min-width: 160px !important; max-width: none !important; }
+      tbody td.sb2 { width: auto !important; min-width: 80px !important; max-width: none !important; }
+      tbody td.abs-sb1 { width: auto !important; min-width: 160px !important; max-width: none !important; }
+      /* Disciplinary — fully scrollable on mobile, no sticky columns */
+      #discTable thead th,
+      #discTable tbody td { position: static !important; z-index: auto !important; box-shadow: none !important; }
+      .cm-arrow-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <p>Loading dashboard...</p>
+</div>
+
+<div class="error-screen" id="errorScreen">
+  <h2>Access Denied</h2>
+  <p id="errorMsg">You do not have permission to view this dashboard.</p>
+</div>
+
+<!-- ── View-More / Info Modal ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ── Staff Change Modal ── -->
+<div class="modal-overlay" id="changeModalOverlay" onclick="closeChangeModal()">
+  <div class="modal-box" style="max-width:580px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="cmTitle">Update Staff Record</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:3px" id="cmSubtitle"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="cmAdminBtn" onclick="openAdminModal()" style="padding:5px 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:none">⚙ Admin</button>
+        <button class="modal-close" onclick="closeChangeModal()">×</button>
+      </div>
+    </div>
+    <div class="modal-body" id="cmBody"></div>
+  </div>
+</div>
+
+<!-- ── Admin / MAB Modal ── -->
+<div class="modal-overlay" id="adminModalOverlay" onclick="closeAdminModal()" style="z-index:1100">
+  <div class="modal-box" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Admin Actions</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:3px" id="adminModalSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeAdminModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px;font-size:12px;color:#6b7280;font-weight:500">MAB Pass Documents</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="generateMabDoc('new')" id="mabNewBtn"
+          style="padding:10px 16px;background:#fff;color:#1d4ed8;border:1.5px solid #1d4ed8;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;transition:all 0.15s"
+          onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
+          Generate MAB New Application
+        </button>
+        <button onclick="generateMabDoc('renewal')" id="mabRenewalBtn"
+          style="padding:10px 16px;background:#fff;color:#0f766e;border:1.5px solid #0f766e;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;transition:all 0.15s"
+          onmouseover="this.style.background='#f0fdfa'" onmouseout="this.style.background='#fff'">
+          Generate MAB Renewal Application
+        </button>
+      </div>
+      <div id="mabStatus" style="margin-top:14px;font-size:12px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DASHBOARD PAGE ════ -->
+<div class="page" id="page">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Staff Dashboard</div>
+      <div class="topbar-subtitle">ADE KUL Line Maintenance — Part 145</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab tab-landing" onclick="goToLanding()">← Landing</button>
+      <button class="nav-tab tab-dashboard active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab tab-absence" onclick="showPage('absence')">Absence</button>
+      <button class="nav-tab tab-disc" onclick="showPage('disc')">Disciplinary</button>
+    </div>
+    <div style="font-size:11px;color:#9ca3af" id="lastRefresh"></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-label">Total Staff</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="statFiltered">—</div>
+      <div class="stat-label">Showing</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="statLicensed" style="color:#16a34a">—</div>
+      <div class="stat-label">Licensed (AMEL / AMTL)</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <select id="filterDesignation" class="filter-select" onchange="applyFilters()" style="min-width:150px">
+      <option value="">All Designations</option>
+    </select>
+    <select id="filterTeam" class="filter-select" onchange="applyFilters()" style="min-width:120px">
+      <option value="">All Teams</option>
+    </select>
+    <select id="filterShift" class="filter-select" onchange="applyFilters()" style="min-width:100px">
+      <option value="">All Shifts</option>
+    </select>
+    <select id="filterLicense" class="filter-select" onchange="applyFilters()" style="min-width:130px">
+      <option value="">All Licenses</option>
+      <option value="AMEL">AMEL</option>
+      <option value="AMTL">AMTL</option>
+      <option value="None">No License</option>
+    </select>
+    <input type="text" id="searchInput" class="search-input" placeholder="Search name / staff no..." oninput="applyFilters()">
+    <button class="btn-clear" onclick="clearFilters()">Clear</button>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="no-data" id="noData" style="display:none">No records found.</div>
+    <table id="mainTable">
+      <thead>
+        <tr class="group-row">
+          <th class="sg1" style="width:315px;min-width:315px;max-width:315px">Full Name</th>
+          <th class="sg2" style="width:100px;min-width:100px;max-width:100px">Staff No</th>
+          <th colspan="13" class="sec">Department Info</th>
+          <th colspan="2" class="sec">Previous Employment</th>
+          <th colspan="6" class="sec">CAAM — AMEL License</th>
+          <th colspan="5" class="sec">CAAM — AMTL License</th>
+          <th colspan="6" class="sec">ADE Approval</th>
+          <th colspan="2" class="sec">Passport</th>
+          <th colspan="2" class="sec">MAB Pass</th>
+          <th colspan="2" class="sec">ADP</th>
+        </tr>
+        <tr class="field-row">
+          <th class="sf1" style="width:315px;min-width:315px;max-width:315px">Full Name</th>
+          <th class="sf2" style="width:100px;min-width:100px;max-width:100px">Staff No</th>
+          <th class="ss" style="min-width:180px">Email</th>
+          <th style="min-width:100px;text-align:center">Joining Date</th>
+          <th style="min-width:100px;text-align:center">Date of Birth</th>
+          <th style="min-width:100px;text-align:center">Nationality</th>
+          <th style="min-width:120px">IC No</th>
+          <th style="min-width:80px;text-align:center">Gender</th>
+          <th style="min-width:110px;text-align:center">Phone No</th>
+          <th style="min-width:120px;text-align:center">Designation</th>
+          <th style="min-width:77px;text-align:center">Team</th>
+          <th style="min-width:100px;text-align:center">Main Trade</th>
+          <th style="min-width:80px;text-align:center">Yr Aviation</th>
+          <th style="min-width:80px;text-align:center">Shift</th>
+          <th style="min-width:90px;text-align:center">Nickname</th>
+          <th class="ss" style="min-width:40px;text-align:center"># Emp</th>
+          <th style="min-width:90px;text-align:center">History</th>
+          <th class="ss lic-th" style="text-align:center">License</th>
+          <th style="min-width:84px;text-align:center">Category</th>
+          <th style="min-width:130px;text-align:center">License No</th>
+          <th style="min-width:90px;text-align:center">Type Rating</th>
+          <th style="min-width:90px;text-align:center">Issue Date</th>
+          <th style="min-width:100px;text-align:center">Expiry</th>
+          <th class="ss" style="min-width:130px;text-align:center">License No</th>
+          <th style="min-width:84px;text-align:center">Category</th>
+          <th style="min-width:90px;text-align:center">Type Rating</th>
+          <th style="min-width:90px;text-align:center">Issue Date</th>
+          <th style="min-width:100px;text-align:center">Expiry</th>
+          <th class="ss" style="min-width:100px;text-align:center">Approval No</th>
+          <th style="min-width:80px;text-align:center">System Code</th>
+          <th style="min-width:90px;text-align:center">Limitation</th>
+          <th style="min-width:90px;text-align:center">Appr. Types</th>
+          <th style="min-width:100px;text-align:center">Expiry</th>
+          <th style="min-width:90px;text-align:center">EGR / Boros.</th>
+          <th class="ss" style="min-width:110px;text-align:center">Passport No</th>
+          <th style="min-width:100px;text-align:center">Expiry</th>
+          <th class="ss" style="min-width:110px;text-align:center">MAB Pass</th>
+          <th style="min-width:100px;text-align:center">Expiry</th>
+          <th class="ss" style="min-width:90px;text-align:center">ADP No</th>
+          <th style="min-width:100px;text-align:center">Expiry</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════ ABSENCE PAGE ════ -->
+<div class="page" id="page-absence">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Absence Records</div>
+      <div class="topbar-subtitle">ADE KUL Line Maintenance — Part 145</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab tab-landing" onclick="goToLanding()">← Landing</button>
+      <button class="nav-tab tab-dashboard" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab tab-absence active" onclick="showPage('absence')">Absence</button>
+      <button class="nav-tab tab-disc" onclick="showPage('disc')">Disciplinary</button>
+    </div>
+    <div style="font-size:11px;color:#9ca3af" id="absLastRefresh"></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-value" id="absStatTotal">—</div>
+      <div class="stat-label">Total Records</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="absStatFiltered">—</div>
+      <div class="stat-label">Showing</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="absStatDays" style="color:#dc2626">—</div>
+      <div class="stat-label">Total Days (Showing)</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <select id="absFilterDesig" class="filter-select" onchange="applyAbsenceFilters()" style="min-width:150px">
+      <option value="">All Designations</option>
+    </select>
+    <select id="absFilterYear" class="filter-select" onchange="applyAbsenceFilters()" style="min-width:90px">
+      <option value="">All Years</option>
+    </select>
+    <select id="absFilterType" class="filter-select" onchange="applyAbsenceFilters()" style="min-width:150px">
+      <option value="">All Types</option>
+      <option value="Medical Leave">Medical Leave</option>
+      <option value="Hospitalisation">Hospitalisation</option>
+      <option value="Emergency Leave">Emergency Leave</option>
+      <option value="Quarantine">Quarantine</option>
+    </select>
+    <input type="text" id="absSearch" class="search-input" placeholder="Search name / staff no..." oninput="applyAbsenceFilters()">
+    <button class="btn-clear" onclick="clearAbsenceFilters()">Clear</button>
+    <span class="result-count" id="absResultCount"></span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="no-data" id="absNoData" style="display:none">No records found.</div>
+    <div id="absLoading" style="padding:60px 24px;text-align:center;color:#9ca3af;font-size:14px;display:none">
+      <div style="display:inline-block;border:3px solid #e5e7eb;border-top:3px solid #6b7280;border-radius:50%;width:32px;height:32px;animation:spin 0.8s linear infinite;margin-bottom:12px"></div>
+      <div>Loading absence records…</div>
+    </div>
+    <table id="absTable" style="display:none">
+      <thead>
+        <tr class="abs-head">
+          <th class="sa1" style="width:44px;min-width:44px;max-width:44px;text-align:center;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 8px;height:34px;position:sticky;top:0;z-index:80;border-right:1px solid #374151">#</th>
+          <th style="min-width:220px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;left:44px;z-index:80;border-right:1px solid #374151">Full Name</th>
+          <th style="min-width:90px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Staff No</th>
+          <th style="min-width:150px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Designation</th>
+          <th style="min-width:200px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Period (Days)</th>
+          <th style="min-width:140px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Type</th>
+          <th style="min-width:180px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151">Remarks</th>
+          <th style="min-width:150px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50">Immediate Superior</th>
+        </tr>
+      </thead>
+      <tbody id="absTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════ DISCIPLINARY PAGE ════ -->
+<div class="page" id="page-disc">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Disciplinary Records</div>
+      <div class="topbar-subtitle">ADE KUL Line Maintenance — Part 145</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab tab-landing" onclick="goToLanding()">← Landing</button>
+      <button class="nav-tab tab-dashboard" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab tab-absence" onclick="showPage('absence')">Absence</button>
+      <button class="nav-tab tab-disc active" onclick="showPage('disc')">Disciplinary</button>
+    </div>
+    <div style="font-size:11px;color:#9ca3af" id="discLastRefresh"></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-value" id="discStatTotal">—</div>
+      <div class="stat-label">Total Records</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="discStatFiltered">—</div>
+      <div class="stat-label">Showing</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="discStatYear" style="color:#4b5563">—</div>
+      <div class="stat-label">Unique Staff (Showing)</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="discStatWarning" style="color:#b91c1c">—</div>
+      <div class="stat-label">Total Warning (Showing)</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-value" id="discStatReprimand" style="color:#854d0e">—</div>
+      <div class="stat-label">Total Reprimand (Showing)</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <select id="discFilterDesig" class="filter-select" onchange="applyDiscFilters()" style="min-width:150px">
+      <option value="">All Designations</option>
+    </select>
+    <select id="discFilterSection" class="filter-select" onchange="applyDiscFilters()" style="min-width:100px">
+      <option value="">All Sections</option>
+    </select>
+    <select id="discFilterYear" class="filter-select" onchange="applyDiscFilters()" style="min-width:90px">
+      <option value="">All Years</option>
+    </select>
+    <select id="discFilterType" class="filter-select" onchange="applyDiscFilters()" style="min-width:150px">
+      <option value="">All Types</option>
+    </select>
+    <input type="text" id="discSearch" class="search-input" placeholder="Search name / staff no / ref no..." oninput="applyDiscFilters()">
+    <button class="btn-clear" onclick="clearDiscFilters()">Clear</button>
+    <span class="result-count" id="discResultCount"></span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="no-data" id="discNoData" style="display:none">No records found.</div>
+    <div id="discLoading" style="padding:60px 24px;text-align:center;color:#9ca3af;font-size:14px;display:none">
+      <div style="display:inline-block;border:3px solid #e5e7eb;border-top:3px solid #7c3aed;border-radius:50%;width:32px;height:32px;animation:spin 0.8s linear infinite;margin-bottom:12px"></div>
+      <div>Loading disciplinary records…</div>
+    </div>
+    <table id="discTable" style="display:none">
+      <thead>
+        <tr class="disc-head">
+          <th style="width:44px;min-width:44px;max-width:44px;text-align:center;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 8px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151">#</th>
+          <th style="min-width:130px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Reference No.</th>
+          <th style="min-width:60px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Year</th>
+          <th style="min-width:100px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Date</th>
+          <th style="min-width:220px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151">Name</th>
+          <th style="min-width:90px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Staff No</th>
+          <th style="min-width:150px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Designation</th>
+          <th style="min-width:80px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Section</th>
+          <th style="min-width:140px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Type</th>
+          <th style="min-width:330px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151">Reason</th>
+          <th style="min-width:130px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Issued By</th>
+          <th style="min-width:90px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50;border-right:1px solid #374151;text-align:center">Reference</th>
+          <th style="min-width:180px;background:#1f2937;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;padding:0 12px;height:34px;position:sticky;top:0;z-index:50">Action</th>
+        </tr>
+      </thead>
+      <tbody id="discTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  var allRows = [];
+  var filteredRows = [];
+  var today = new Date(); today.setHours(0,0,0,0);
+  var docSvg = '<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+
+  var DESIG_ORDER = [
+    'Technician', 'Technician - Cat A', 'Lead Technician',
+    'Maintenance Supervisor', 'LAE - B1', 'LAE - B2',
+    'Lead Engineer', 'Lead Engineer Ops', 'Manager'
+  ];
+  var DESIG_CLASS = {
+    'Technician':            'desig-tech',
+    'Technician - Cat A':    'desig-tech-a',
+    'Lead Technician':       'desig-lead-tech',
+    'Maintenance Supervisor':'desig-ms',
+    'LAE - B1':              'desig-lae-b1',
+    'LAE - B2':              'desig-lae-b2',
+    'Lead Engineer':         'desig-le',
+    'Lead Engineer Ops':     'desig-le-ops',
+    'Manager':               'desig-mgr'
+  };
+  var SHIFT_LIST = ['A','C','B','D','Float-A','Float-B','Cart-A','Cart-B','A/O','LMCC'];
+
+  function goToLanding() {
+    google.script.run
+      .withSuccessHandler(function(url) { window.top.location.href = url; })
+      .withFailureHandler(function()    { window.top.location.href = window.top.location.href.split('?')[0]; })
+      .getScriptUrl();
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    var timeout = setTimeout(function() { showError('Server timeout. Please refresh.'); }, 20000);
+    google.script.run
+      .withSuccessHandler(function(result) {
+        clearTimeout(timeout);
+        if (!result || !result.rows) { showError('No data returned.'); return; }
+        allRows = result.rows.sort(function(a, b) {
+          var na = (a.full_name || '').toLowerCase();
+          var nb = (b.full_name || '').toLowerCase();
+          return na < nb ? -1 : na > nb ? 1 : 0;
+        });
+        buildFilters();
+        applyFilters();
+        updateStats();
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('page').classList.add('show');
+        document.getElementById('lastRefresh').textContent =
+          'Refreshed: ' + new Date().toLocaleTimeString('en-MY');
+      })
+      .withFailureHandler(function(err) {
+        clearTimeout(timeout);
+        showError(err.message || String(err));
+      })
+      .getDashboardData();
+  });
+
+  function showError(msg) {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('errorMsg').textContent = msg;
+    document.getElementById('errorScreen').classList.add('show');
+  }
+
+  // ── Filters ──────────────────────────────────────────────────────────────────
+  function buildFilters() {
+    var existingDesigs = unique('designation');
+    var orderedDesigs = DESIG_ORDER.filter(function(d) { return existingDesigs.indexOf(d) !== -1; });
+    existingDesigs.forEach(function(d) { if (orderedDesigs.indexOf(d) === -1) orderedDesigs.push(d); });
+    populateFilter('filterDesignation', orderedDesigs);
+    populateFilter('filterTeam',  unique('team'));
+    populateFilter('filterShift', unique('shift'));
+  }
+  function unique(field) {
+    var seen = {}, out = [];
+    allRows.forEach(function(r) {
+      var val = (r[field] || '').trim();
+      if (val && !seen[val]) { seen[val] = 1; out.push(val); }
+    });
+    return out.sort();
+  }
+  function populateFilter(id, values) {
+    var sel = document.getElementById(id);
+    var first = sel.options[0];
+    sel.innerHTML = ''; sel.appendChild(first);
+    values.forEach(function(val) {
+      var opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; sel.appendChild(opt);
+    });
+  }
+  function applyFilters() {
+    var fDesig   = document.getElementById('filterDesignation').value;
+    var fTeam    = document.getElementById('filterTeam').value;
+    var fShift   = document.getElementById('filterShift').value;
+    var fLicense = document.getElementById('filterLicense').value;
+    var fSearch  = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    filteredRows = allRows.filter(function(r) {
+      if (fDesig   && (r.designation || '').trim() !== fDesig)  return false;
+      if (fTeam    && (r.team        || '').trim() !== fTeam)   return false;
+      if (fShift   && (r.shift       || '').trim() !== fShift)  return false;
+      if (fLicense) {
+        var lic = (r.available_license || '').toUpperCase();
+        if (fLicense === 'AMEL' && lic.indexOf('AMEL') === -1) return false;
+        if (fLicense === 'AMTL' && lic.indexOf('AMTL') === -1) return false;
+        if (fLicense === 'None' && lic !== '' && lic !== 'NONE') return false;
+      }
+      if (fSearch) {
+        var hay = ((r.full_name || '') + ' ' + (r.staff_no || '')).toLowerCase();
+        if (hay.indexOf(fSearch) === -1) return false;
+      }
+      return true;
+    });
+
+    renderTable(filteredRows);
+    document.getElementById('resultCount').textContent = filteredRows.length + ' of ' + allRows.length + ' staff';
+    document.getElementById('statFiltered').textContent = filteredRows.length;
+  }
+  function clearFilters() {
+    ['filterDesignation','filterTeam','filterShift','filterLicense'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('searchInput').value = '';
+    applyFilters();
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = allRows.length;
+    var licensed = 0;
+    allRows.forEach(function(r) {
+      var lic = (r.available_license || '').toUpperCase();
+      if (lic.indexOf('AMEL') !== -1 || lic.indexOf('AMTL') !== -1) licensed++;
+    });
+    document.getElementById('statLicensed').textContent = licensed;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  function expiryStatus(dateVal) {
+    if (!dateVal || !String(dateVal).trim()) return null;
+    var d = new Date(dateVal); d.setHours(0,0,0,0);
+    if (isNaN(d.getTime())) return null;
+    var diff = Math.ceil((d - today) / 86400000);
+    if (diff < 0)    return 'expired';
+    if (diff <= 90)  return 'critical';
+    if (diff <= 180) return 'warning';
+    return 'ok';
+  }
+  function expiryBadge(dateVal) {
+    if (!dateVal || !String(dateVal).trim()) return dash();
+    var s = expiryStatus(dateVal);
+    if (!s) return String(dateVal);
+    var labels = { expired:'Expired', critical:'< 90 days', warning:'< 180 days', ok:'Valid' };
+    return '<span style="display:block;font-size:11px;margin-bottom:2px">' + dateVal + '</span>' +
+           '<span class="exp-badge ' + s + '">' + labels[s] + '</span>';
+  }
+  function docLink(url) {
+    if (!url) return '';
+    return '<a href="' + url + '" target="_blank" class="doc-link" onclick="event.stopPropagation()">' + docSvg + '</a>';
+  }
+  function extractUrl(raw) {
+    if (!raw) return '';
+    var s = String(raw).trim();
+    if (s.indexOf('http') === 0) return s;
+    var m = s.match(/HYPERLINK\s*\(\s*"([^"]+)"/i); if (m) return m[1];
+    var m2 = s.match(/https?:\/\/[^\s"'<>]+/); return m2 ? m2[0] : '';
+  }
+  function chips(csvStr, hl) {
+    if (!csvStr || !String(csvStr).trim()) return dash();
+    var parts = String(csvStr).split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+    if (!parts.length) return dash();
+    return '<div class="chips">' + parts.map(function(p) {
+      return '<span class="chip' + (hl ? ' hl' : '') + '">' + p + '</span>';
+    }).join('') + '</div>';
+  }
+  function dash() { return '<span style="color:#d1d5db;font-style:italic;font-size:11px">—</span>'; }
+  function v(x)   { return x && String(x).trim() ? String(x).trim() : null; }
+  function fmtDate(dv) {
+    if (!dv) return null;
+    try {
+      var d = new Date(dv);
+      if (isNaN(d.getTime())) return dv;
+      return d.toLocaleDateString('en-MY', { year:'numeric', month:'short', day:'numeric' });
+    } catch(e) { return dv; }
+  }
+  function hasContent(s) { return !!(s && String(s).trim() && String(s).trim() !== 'Not Avail'); }
+  function desigBadge(val) {
+    if (!val || !val.trim()) return dash();
+    var cls = DESIG_CLASS[val.trim()] || 'desig-other';
+    return '<span class="desig-badge ' + cls + '">' + val.trim() + '</span>';
+  }
+  function licenseChips(csvStr) {
+    if (!csvStr || !String(csvStr).trim()) return '<span style="color:#e5e7eb;font-style:italic;font-size:11px">None</span>';
+    var upper = String(csvStr).trim().toUpperCase();
+    if (upper === 'NONE' || upper === 'NIL' || upper === 'N/A') {
+      return '<span style="color:#d1d5db;font-size:10px;font-weight:500">None</span>';
+    }
+    return chips(csvStr, true);
+  }
+  function vmBtn(fn) {
+    return '<button class="vm-btn" onclick="event.stopPropagation();' + fn + '">View More</button>';
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+  function renderTable(rows) {
+    var tbody  = document.getElementById('tableBody');
+    var noData = document.getElementById('noData');
+    tbody.innerHTML = '';
+
+    if (!rows.length) {
+      noData.style.display = 'block';
+      return;
+    }
+    noData.style.display = 'none';
+
+    var CHUNK = 40;
+    var index = 0;
+
+    // Show a lightweight progress bar while chunks render
+    var prog = document.createElement('tr');
+    prog.id  = 'renderProgress';
+    prog.innerHTML =
+      '<td colspan="99" style="padding:10px 24px;color:#9ca3af;font-size:12px;text-align:center">' +
+      'Rendering <span id="renderCount">0</span> of ' + rows.length + ' rows…</td>';
+    tbody.appendChild(prog);
+
+    function renderChunk() {
+      var progRow = document.getElementById('renderProgress');
+
+      // Build HTML for this chunk
+      var html = '';
+      var end  = Math.min(index + CHUNK, rows.length);
+      for (var i = index; i < end; i++) html += buildRow(rows[i], i);
+      index = end;
+
+      // Parse into a temporary element and move nodes into real tbody
+      var temp = document.createElement('table');
+      temp.innerHTML = '<tbody>' + html + '</tbody>';
+      var tempBody = temp.querySelector('tbody');
+      while (tempBody.firstChild) tbody.insertBefore(tempBody.firstChild, progRow);
+
+      // Update or remove progress indicator
+      if (index < rows.length) {
+        var ct = document.getElementById('renderCount');
+        if (ct) ct.textContent = index;
+        requestAnimationFrame(renderChunk);
+      } else {
+        if (progRow) progRow.parentNode.removeChild(progRow);
+      }
+    }
+
+    requestAnimationFrame(renderChunk);
+  }
+
+  function buildRow(r, ri) {
+    var noEmp = parseInt(r.no_of_employment) || 0;
+    var amelLicNo  = v(r.amel_license);
+    var amelPdfUrl = extractUrl(r.amel_pdf_link);
+    var amelNoCell = amelLicNo
+      ? '<span style="display:block;margin-bottom:3px">' + amelLicNo + '</span>' + (amelPdfUrl ? docLink(amelPdfUrl) : '')
+      : dash();
+    var amelIssue    = v(r.amel_issue_date) ? (fmtDate(r.amel_issue_date) || r.amel_issue_date) : dash();
+    var amelTypeCell = (hasContent(r.b1_type_rating) || hasContent(r.b2_type_rating) || hasContent(r.c_type_rating))
+      ? vmBtn('openAmelTypeRatingModal(' + ri + ')') : dash();
+
+    var amtlLicNo  = v(r.amtl_license_no);
+    var amtlPdfUrl = extractUrl(r.amtl_pdf_link);
+    var amtlNoCell = amtlLicNo
+      ? '<span style="display:block;margin-bottom:3px">' + amtlLicNo + '</span>' + (amtlPdfUrl ? docLink(amtlPdfUrl) : '')
+      : dash();
+    var amtlIssue    = v(r.amtl_issue_date) ? (fmtDate(r.amtl_issue_date) || r.amtl_issue_date) : dash();
+    var amtlTypeCell = hasContent(r.a1_type_rating) ? vmBtn('openAmtlTypeRatingModal(' + ri + ')') : dash();
+
+    var adeNo     = v(r.ade_approval_no);
+    var adePdfUrl = extractUrl(r.ade_approval_pdf_link);
+    var adeNoCell = adeNo
+      ? '<span style="display:block;margin-bottom:3px">' + adeNo + '</span>' + (adePdfUrl ? docLink(adePdfUrl) : '')
+      : dash();
+    var adeTypesCell = (hasContent(r.b1_ade_approval_type) || hasContent(r.b2_ade_approval_type) ||
+                        hasContent(r.c_ade_approval_type)  || hasContent(r.a_ade_approval_type))
+      ? vmBtn('openAdeApprovalModal(' + ri + ')') : dash();
+    var egrBoroCell = (hasContent(r.egr) || hasContent(r.boroscope) || hasContent(r.compass_swign))
+      ? vmBtn('openEgrBoroModal(' + ri + ')') : dash();
+
+    var limitationCell = !hasContent(r.limitation)
+      ? dash()
+      : r.limitation.trim().toLowerCase() === 'nil'
+        ? '<span style="font-size:12px;color:#6b7280;">Nil</span>'
+        : vmBtn('openLimitationModal(' + ri + ')');
+
+    var ppNo = v(r.passport_no), ppPdfUrl = extractUrl(r.passport_pdf_link);
+    var ppCell = ppNo
+      ? '<span style="display:block;margin-bottom:3px">' + ppNo + '</span>' + (ppPdfUrl ? docLink(ppPdfUrl) : '')
+      : dash();
+
+    var mabPdfUrl = extractUrl(r.mab_pass_pdf_link);
+    var mabCell   = mabPdfUrl ? docLink(mabPdfUrl) : dash();
+
+    var adpNo = v(r.adp_no), adpPdfUrl = extractUrl(r.adp_pdf_link);
+    var adpCell = adpNo
+      ? '<span style="display:block;margin-bottom:3px">' + adpNo + '</span>' + (adpPdfUrl ? docLink(adpPdfUrl) : '')
+      : dash();
+
+    return '<tr>' +
+      '<td class="sb1" onclick="openChangeModal(' + ri + ')" title="Click to update staff record" style="cursor:pointer">' +
+        '<span style="border-bottom:1px dashed #9ca3af">' + (v(r.full_name) || '—') + '</span>' +
+      '</td>' +
+      '<td class="sb2">' + (v(r.staff_no)  || '—') + '</td>' +
+      '<td class="ss" style="min-width:180px;font-size:11px">' + (v(r.email_address) || dash()) + '</td>' +
+      '<td style="text-align:center">' + (r.joining_date  ? (fmtDate(r.joining_date)  || r.joining_date)  : dash()) + '</td>' +
+      '<td style="text-align:center">' + (r.date_of_birth ? (fmtDate(r.date_of_birth) || r.date_of_birth) : dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.nationality)  || dash()) + '</td>' +
+      '<td>' + (v(r.ic_no) ? v(r.ic_no) + (extractUrl(r.ic_pdf_link) ? '&nbsp;' + docLink(extractUrl(r.ic_pdf_link)) : '') : dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.gender)              || dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.phone_no)            || dash()) + '</td>' +
+      '<td style="text-align:center">' + desigBadge(r.designation) + '</td>' +
+      '<td style="text-align:center">' + (v(r.team)                || dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.main_trade)          || dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.year_joined_aviation)|| dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.shift)               || dash()) + '</td>' +
+      '<td style="text-align:center">' + (v(r.nickname)            || dash()) + '</td>' +
+      '<td class="ss" style="text-align:center;font-weight:700">' + (noEmp || dash()) + '</td>' +
+      '<td style="text-align:center">' + (noEmp > 0 ? vmBtn('openEmploymentModal(' + ri + ')') : dash()) + '</td>' +
+      '<td class="ss lic-cell" style="text-align:center">' + licenseChips(r.available_license) + '</td>' +
+      '<td style="text-align:center">' + chips(r.amel_license_category) + '</td>' +
+      '<td style="text-align:center">' + amelNoCell + '</td>' +
+      '<td style="text-align:center">' + amelTypeCell + '</td>' +
+      '<td style="text-align:center">' + amelIssue + '</td>' +
+      '<td style="text-align:center">' + expiryBadge(r.amel_license_expiry) + '</td>' +
+      '<td class="ss" style="text-align:center">' + amtlNoCell + '</td>' +
+      '<td style="text-align:center">' + chips(r.amtl_license_category) + '</td>' +
+      '<td style="text-align:center">' + amtlTypeCell + '</td>' +
+      '<td style="text-align:center">' + amtlIssue + '</td>' +
+      '<td style="text-align:center">' + expiryBadge(r.amtl_license_expiry) + '</td>' +
+      '<td class="ss" style="text-align:center">' + adeNoCell + '</td>' +
+      '<td style="text-align:center">' + chips(r.ade_system_code) + '</td>' +
+      '<td style="text-align:center">' + limitationCell + '</td>' +
+      '<td style="text-align:center">' + adeTypesCell + '</td>' +
+      '<td style="text-align:center">' + expiryBadge(r.ade_approval_expiry) + '</td>' +
+      '<td style="text-align:center">' + egrBoroCell + '</td>' +
+      '<td class="ss" style="text-align:center">' + ppCell + '</td>' +
+      '<td style="text-align:center">' + expiryBadge(r.passport_expiry) + '</td>' +
+      '<td class="ss" style="text-align:center">' + mabCell + '</td>' +
+      '<td style="text-align:center">' + expiryBadge(r.mab_pass_expiry_date) + '</td>' +
+      '<td class="ss" style="text-align:center">' + adpCell + '</td>' +
+      '<td style="text-align:center">' + expiryBadge(r.adp_expiry_date) + '</td>' +
+      '</tr>';
+  }
+
+  // ── View-More Modal ───────────────────────────────────────────────────────────
+  function openModal(title, body) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = body;
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+
+  function openLimitationModal(ri) {
+    var r = filteredRows[ri]; if (!r) return;
+    var items = String(r.limitation || '').split(',')
+      .map(function(x) { return x.trim(); })
+      .filter(Boolean)
+      .sort(function(a, b) { return parseInt(a) - parseInt(b); });
+
+    var html = '';
+    if (items.length) {
+      html += '<div class="modal-section">' +
+        '<div class="modal-sec-title">Limitation Numbers</div>';
+      items.forEach(function(num) {
+        html += '<div class="modal-item">Limitation ' + num + '</div>';
+      });
+      html += '</div>';
+    }
+
+    openModal(
+      (r.full_name || '—') + ' — ADE Approval Limitation',
+      html || '<p class="modal-nil">No limitation recorded.</p>'
+    );
+  }
+
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeModal(); closeChangeModal(); }
+  });
+
+  function modalSection(title, csvStr) {
+    var items = String(csvStr || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+    if (!items.length) return '';
+    var html = '<div class="modal-section"><div class="modal-sec-title">' + title + '</div>';
+    items.forEach(function(it) { html += '<div class="modal-item">' + it + '</div>'; });
+    return html + '</div>';
+  }
+  function modalRow(label, value) {
+    return '<div class="modal-row"><span class="modal-rl">' + label + '</span>' +
+           '<span class="modal-rv">' + ((value && String(value).trim()) ? String(value).trim() : '—') + '</span></div>';
+  }
+
+  function openEmploymentModal(ri) {
+    var r = filteredRows[ri]; if (!r) return;
+    var noEmp = parseInt(r.no_of_employment) || 0;
+    var suf = [
+      { s:'last',        label:'1st Employment (Most Recent)' },
+      { s:'second_last', label:'2nd Employment' },
+      { s:'third_last',  label:'3rd Employment' }
+    ];
+    var html = '';
+    for (var e = 0; e < Math.min(noEmp, 3); e++) {
+      var sf = suf[e];
+      html += '<div class="modal-section"><div class="modal-sec-title">' + sf.label + '</div>';
+      html += modalRow('Company',        r['company_'     + sf.s]);
+      html += modalRow('Section',        r['section_'     + sf.s]);
+      html += modalRow('Designation',    r['designation_' + sf.s]);
+      html += modalRow('Aircraft Type',  r['type_'        + sf.s]);
+      html += modalRow('Start Date',     r['start_date_'  + sf.s]);
+      html += modalRow('End Date',       r['end_date_'    + sf.s]);
+      html += modalRow('Duration (yrs)', r['year_'        + sf.s]);
+      html += '</div>';
+    }
+    openModal((r.full_name || '—') + ' — Employment History',
+      html || '<p class="modal-nil">No employment records.</p>');
+  }
+  function openAmelTypeRatingModal(ri) {
+    var r = filteredRows[ri]; if (!r) return;
+    var html = '';
+    if (hasContent(r.b1_type_rating)) html += modalSection('B1.1 Type Ratings', r.b1_type_rating);
+    if (hasContent(r.b2_type_rating)) html += modalSection('B2 Type Ratings',   r.b2_type_rating);
+    if (hasContent(r.c_type_rating))  html += modalSection('C Type Ratings',    r.c_type_rating);
+    openModal((r.full_name || '—') + ' — AMEL Type Ratings',
+      html || '<p class="modal-nil">No type ratings recorded.</p>');
+  }
+  function openAmtlTypeRatingModal(ri) {
+    var r = filteredRows[ri]; if (!r) return;
+    var html = '';
+    if (hasContent(r.a1_type_rating)) html += modalSection('A1 Type Ratings', r.a1_type_rating);
+    openModal((r.full_name || '—') + ' — AMTL Type Ratings',
+      html || '<p class="modal-nil">No type ratings recorded.</p>');
+  }
+  function openAdeApprovalModal(ri) {
+    var r = filteredRows[ri]; if (!r) return;
+    var html = '';
+    if (hasContent(r.b1_ade_approval_type)) html += modalSection('B1.1 Approval Types', r.b1_ade_approval_type);
+    if (hasContent(r.b2_ade_approval_type)) html += modalSection('B2 Approval Types',   r.b2_ade_approval_type);
+    if (hasContent(r.c_ade_approval_type))  html += modalSection('C Approval Types',    r.c_ade_approval_type);
+    if (hasContent(r.a_ade_approval_type))  html += modalSection('A Approval Types',    r.a_ade_approval_type);
+    openModal((r.full_name || '—') + ' — ADE Approval Types',
+      html || '<p class="modal-nil">No approval types recorded.</p>');
+  }
+  function openEgrBoroModal(ri) {
+    var r = filteredRows[ri]; if (!r) return;
+    var html = '';
+    if (hasContent(r.egr))           html += modalSection('EGR',       r.egr);
+    if (hasContent(r.boroscope))     html += modalSection('Boroscope', r.boroscope);
+    if (hasContent(r.compass_swign)) {
+      html += '<div class="modal-section"><div class="modal-sec-title">Compass Swing</div>' +
+              '<div class="modal-item">' + r.compass_swign + '</div></div>';
+    }
+    openModal((r.full_name || '—') + ' — EGR / Boroscope / Compass Swing',
+      html || '<p class="modal-nil">No records.</p>');
+  }
+
+  // ════════════════════════════════════════════════════════════════════════════
+  //  STAFF CHANGE MODAL
+  // ════════════════════════════════════════════════════════════════════════════
+
+  var changeModalRow = null;
+
+  function openChangeModal(ri) {
+    var r = filteredRows[ri];
+    if (!r) return;
+    changeModalRow = r;
+
+    var name   = v(r.full_name) || '—';
+    var staffNo = v(r.staff_no) || '';
+    var todayStr = new Date().toISOString().split('T')[0];
+
+    document.getElementById('cmTitle').textContent = 'Update Staff Record';
+    document.getElementById('cmSubtitle').textContent = name + (staffNo ? '  ·  ' + staffNo : '');
+
+    // ── current values ─────────────────────────────────────────────────
+    var curDesig   = v(r.designation) || '';
+    var curSection = v(r.team)        || '';   // team = NB / WB section
+    var curShift   = v(r.shift)       || '';
+
+    // ── build designation options ──────────────────────────────────────
+    var desigOpts = DESIG_ORDER.map(function(d) {
+      return '<option value="' + d + '"' + (d === curDesig ? ' selected' : '') + '>' + d + '</option>';
+    }).join('');
+
+    // ── build shift options ────────────────────────────────────────────
+    var shiftOpts = SHIFT_LIST.map(function(s) {
+      return '<option value="' + s + '"' + (s === curShift ? ' selected' : '') + '>' + s + '</option>';
+    }).join('');
+
+    var sectionOpts =
+      '<option value="NB"' + (curSection === 'NB' ? ' selected' : '') + '>NB</option>' +
+      '<option value="WB"' + (curSection === 'WB' ? ' selected' : '') + '>WB</option>';
+
+    var html = '';
+
+    // ── Info banner ────────────────────────────────────────────────────
+    html += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#1d4ed8;line-height:1.5">' +
+      'Toggle the fields below to record changes for <strong>' + name + '</strong>. ' +
+      'Only checked fields will be saved. Each change is recorded as a separate history entry.' +
+    '</div>';
+
+    // ── Field: Designation ─────────────────────────────────────────────
+    html += buildCmFieldCard(
+      'desig', 'Change Designation', curDesig || '—',
+      '<select id="cmDesigTo" class="filter-select" style="min-width:190px">' + desigOpts + '</select>',
+      todayStr, false
+    );
+
+    // ── Field: Section ─────────────────────────────────────────────────
+    html += buildCmFieldCard(
+      'section', 'Change Section', curSection || '—',
+      '<select id="cmSectionTo" class="filter-select">' + sectionOpts + '</select>',
+      todayStr, false
+    );
+
+    // ── Field: Shift ───────────────────────────────────────────────────
+    html += buildCmFieldCard(
+      'shift', 'Change Shift', curShift || '—',
+      '<select id="cmShiftTo" class="filter-select">' + shiftOpts + '</select>',
+      todayStr, false
+    );
+
+    // ── Divider ────────────────────────────────────────────────────────
+    html += '<div style="border-top:2px solid #f3f4f6;margin:18px 0 14px"></div>';
+
+    // ── Status banner ──────────────────────────────────────────────────
+    html += '<div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#854d0e;line-height:1.5">' +
+      '⚠️ Use this section to record a <strong>resignation or transfer out</strong> from LMS for <strong>' + name + '</strong>. ' +
+      'This will update the staff status record in the system.' +
+    '</div>';
+
+    // ── Field: Status ──────────────────────────────────────────────────
+    html += buildCmStatusCard(todayStr);
+
+    // ── Footer buttons ─────────────────────────────────────────────────
+    html += '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:14px;border-top:1px solid #e5e7eb">' +
+      '<button class="btn-clear" onclick="closeChangeModal()">Cancel</button>' +
+      '<button id="cmSubmitBtn" class="cm-submit-btn" onclick="submitChangeModal()">Submit Changes</button>' +
+    '</div>';
+
+    document.getElementById('cmBody').innerHTML = html;
+    document.getElementById('changeModalOverlay').classList.add('show');
+    // Show the Admin button now that we have a staff row
+    var adminBtn = document.getElementById('cmAdminBtn');
+    if (adminBtn) adminBtn.style.display = 'inline-block';
+
+    // ── Wire up toggle checkboxes ──────────────────────────────────────
+    ['desig', 'section', 'shift', 'status'].forEach(function(key) {
+      var cb    = document.getElementById('cmCb_' + key);
+      var card  = document.getElementById('cmCard_' + key);
+      var panel = document.getElementById('cmPanel_' + key);
+      if (!cb || !panel || !card) return;
+      cb.addEventListener('change', function() {
+        panel.classList.toggle('open', cb.checked);
+        card.classList.toggle('active', cb.checked);
+        validateSubmitBtn(r);
+      });
+      // Re-validate on select change
+      var sel = document.getElementById('cm' + key.charAt(0).toUpperCase() + key.slice(1) + 'To');
+      if (sel) sel.addEventListener('change', function() { validateSubmitBtn(r); });
+    });
+    // Status reason select also triggers re-validate
+    var statusSel = document.getElementById('cmStatusReason');
+    if (statusSel) statusSel.addEventListener('change', function() { validateSubmitBtn(r); });
+
+    // Initial state — button disabled until a real change is made
+    validateSubmitBtn(r);
+  }
+
+  function validateSubmitBtn(r) {
+    var btn = document.getElementById('cmSubmitBtn');
+    if (!btn) return;
+
+    var anyChecked  = false;
+    var allValid    = true;
+
+    // ── Designation ────────────────────────────────────────────────────
+    var cbDesig = document.getElementById('cmCb_desig');
+    if (cbDesig && cbDesig.checked) {
+      anyChecked = true;
+      var selDesig = document.getElementById('cmDesigTo');
+      if (selDesig && selDesig.value === (v(r.designation) || '')) allValid = false;
+    }
+
+    // ── Section ────────────────────────────────────────────────────────
+    var cbSection = document.getElementById('cmCb_section');
+    if (cbSection && cbSection.checked) {
+      anyChecked = true;
+      var selSection = document.getElementById('cmSectionTo');
+      if (selSection && selSection.value === (v(r.team) || '')) allValid = false;
+    }
+
+    // ── Shift ──────────────────────────────────────────────────────────
+    var cbShift = document.getElementById('cmCb_shift');
+    if (cbShift && cbShift.checked) {
+      anyChecked = true;
+      var selShift = document.getElementById('cmShiftTo');
+      if (selShift && selShift.value === (v(r.shift) || '')) allValid = false;
+    }
+
+    // ── Status (always valid when checked — reason is always different) ─
+    var cbStatus = document.getElementById('cmCb_status');
+    if (cbStatus && cbStatus.checked) anyChecked = true;
+
+    var enabled = anyChecked && allValid;
+    btn.disabled = !enabled;
+    btn.title = !anyChecked
+      ? 'Tick at least one field to update.'
+      : !allValid
+        ? 'One or more selected fields have no change from the current value.'
+        : '';
+
+    // ── Visual card feedback ───────────────────────────────────────────
+    [
+      { key: 'desig',   sel: 'cmDesigTo',   cur: v(r.designation) || '' },
+      { key: 'section', sel: 'cmSectionTo', cur: v(r.team)        || '' },
+      { key: 'shift',   sel: 'cmShiftTo',   cur: v(r.shift)       || '' }
+    ].forEach(function(f) {
+      var cb   = document.getElementById('cmCb_' + f.key);
+      var card = document.getElementById('cmCard_' + f.key);
+      var hint = document.getElementById('cmHint_' + f.key);
+      var sel  = document.getElementById(f.sel);
+      if (!cb || !card || !hint || !sel) return;
+      var unchanged = cb.checked && sel.value === f.cur;
+      card.classList.toggle('no-change', unchanged);
+      hint.classList.toggle('show', unchanged);
+    });
+  }
+
+  function buildCmFieldCard(key, label, currentVal, selectHtml, defaultDate, isStatus) {
+    return '<div class="cm-field-card" id="cmCard_' + key + '">' +
+      '<label class="cm-field-label" for="cmCb_' + key + '">' +
+        '<input type="checkbox" id="cmCb_' + key + '">' +
+        '<span class="cm-field-name">' + label + '</span>' +
+        '<span class="cm-current-tag">Current: <strong>' + esc(currentVal) + '</strong></span>' +
+      '</label>' +
+      '<div class="cm-panel" id="cmPanel_' + key + '">' +
+        '<div class="cm-arrow-row">' +
+          '<span class="cm-from-tag" id="cmFrom_' + key + '">' + esc(currentVal) + '</span>' +
+          '<span class="cm-arrow">→</span>' +
+          selectHtml +
+          '<input type="date" id="cmDate_' + key + '" class="cm-date-input" value="' + defaultDate + '">' +
+        '</div>' +
+        '<div class="cm-no-change-hint" id="cmHint_' + key + '">⚠ Selected value is the same as current — no change will be recorded.</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildCmStatusCard(defaultDate) {
+    return '<div class="cm-field-card status-card" id="cmCard_status">' +
+      '<label class="cm-field-label" for="cmCb_status">' +
+        '<input type="checkbox" id="cmCb_status">' +
+        '<span class="cm-field-name">Change Status</span>' +
+      '</label>' +
+      '<div class="cm-panel" id="cmPanel_status">' +
+        '<div class="cm-arrow-row">' +
+          '<span style="font-size:11px;color:#6b7280;font-weight:500;flex-shrink:0">Reason:</span>' +
+          '<select id="cmStatusReason" class="filter-select">' +
+            '<option value="Resigned">Resigned</option>' +
+            '<option value="Transfer">Transfer</option>' +
+          '</select>' +
+          '<input type="date" id="cmDate_status" class="cm-date-input" value="' + defaultDate + '">' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function closeChangeModal() {
+    document.getElementById('changeModalOverlay').classList.remove('show');
+    var adminBtn = document.getElementById('cmAdminBtn');
+    if (adminBtn) adminBtn.style.display = 'none';
+    changeModalRow = null;
+  }
+
+  function submitChangeModal() {
+    var r = changeModalRow;
+    if (!r) return;
+
+    var changes      = [];
+    var statusChange = null;
+
+    // ── Collect Designation ────────────────────────────────────────────
+    var cbDesig = document.getElementById('cmCb_desig');
+    if (cbDesig && cbDesig.checked) {
+      var toDesig = document.getElementById('cmDesigTo').value;
+      var dtDesig = document.getElementById('cmDate_desig').value;
+      if (!dtDesig) { alert('Please select an effective date for Designation change.'); return; }
+      changes.push({ type: 'Designation', toVal: toDesig, date: dtDesig });
+    }
+
+    // ── Collect Section ────────────────────────────────────────────────
+    var cbSection = document.getElementById('cmCb_section');
+    if (cbSection && cbSection.checked) {
+      var toSection = document.getElementById('cmSectionTo').value;
+      var dtSection = document.getElementById('cmDate_section').value;
+      if (!dtSection) { alert('Please select an effective date for Section change.'); return; }
+      changes.push({ type: 'Section', toVal: toSection, date: dtSection });
+    }
+
+    // ── Collect Shift ──────────────────────────────────────────────────
+    var cbShift = document.getElementById('cmCb_shift');
+    if (cbShift && cbShift.checked) {
+      var toShift = document.getElementById('cmShiftTo').value;
+      var dtShift = document.getElementById('cmDate_shift').value;
+      if (!dtShift) { alert('Please select an effective date for Shift change.'); return; }
+      changes.push({ type: 'Shift', toVal: toShift, date: dtShift });
+    }
+
+    // ── Collect Status ─────────────────────────────────────────────────
+    var cbStatus = document.getElementById('cmCb_status');
+    if (cbStatus && cbStatus.checked) {
+      var statusReason = document.getElementById('cmStatusReason').value;
+      var dtStatus     = document.getElementById('cmDate_status').value;
+      if (!dtStatus) { alert('Please select an effective date for Status change.'); return; }
+      statusChange = { reason: statusReason, date: dtStatus };
+    }
+
+    if (!changes.length && !statusChange) {
+      alert('Please toggle at least one field to update.');
+      return;
+    }
+
+    var btn = document.getElementById('cmSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    var payload = {
+      staffNo:      v(r.staff_no)      || '',
+      email:        v(r.email_address) || '',
+      fullName:     v(r.full_name)     || '',
+      curDesig:     v(r.designation)   || '',
+      curSection:   v(r.team)          || '',
+      curShift:     v(r.shift)         || '',
+      changes:      changes,
+      statusChange: statusChange
+    };
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result && result.success) {
+          closeChangeModal();
+          // Refresh data to reflect updates
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && res.rows) {
+                allRows = res.rows.sort(function(a,b){
+                  return (a.full_name||'').toLowerCase() < (b.full_name||'').toLowerCase() ? -1 : 1;
+                });
+                applyFilters();
+                updateStats();
+              }
+            })
+            .getDashboardData();
+          alert('Changes saved successfully for ' + (v(r.full_name) || 'staff') + '.');
+        } else {
+          alert('Error: ' + (result ? result.message : 'Unknown error'));
+          btn.disabled = false;
+          btn.textContent = 'Submit Changes';
+        }
+      })
+      .withFailureHandler(function(err) {
+        alert('Failed: ' + (err.message || String(err)));
+        btn.disabled = false;
+        btn.textContent = 'Submit Changes';
+      })
+      .submitStaffChange(payload);
+  }
+
+  // ── Page navigation ───────────────────────────────────────────────────────────
+  var absLoaded = false, discLoaded = false;
+  function showPage(name) {
+    ['page','page-absence','page-disc'].forEach(function(id) {
+      document.getElementById(id).classList.remove('show');
+    });
+    document.querySelectorAll('.nav-tab').forEach(function(btn) {
+      var isDash = btn.classList.contains('tab-dashboard');
+      var isAbs  = btn.classList.contains('tab-absence');
+      var isDisc = btn.classList.contains('tab-disc');
+      btn.classList.remove('active');
+      if (name === 'dashboard'  && isDash) btn.classList.add('active');
+      if (name === 'absence'    && isAbs)  btn.classList.add('active');
+      if (name === 'disc'       && isDisc) btn.classList.add('active');
+    });
+    if (name === 'dashboard') {
+      document.getElementById('page').classList.add('show');
+    } else if (name === 'absence') {
+      document.getElementById('page-absence').classList.add('show');
+      if (!absLoaded) loadAbsence();
+    } else if (name === 'disc') {
+      document.getElementById('page-disc').classList.add('show');
+      if (!discLoaded) loadDisc();
+    }
+  }
+
+  // ── Absence ───────────────────────────────────────────────────────────────────
+  var absAllRows = [], absFilteredRows = [];
+
+  function loadAbsence() {
+    document.getElementById('absLoading').style.display = 'block';
+    document.getElementById('absTable').style.display   = 'none';
+    document.getElementById('absNoData').style.display  = 'none';
+    google.script.run
+      .withSuccessHandler(function(result) {
+        document.getElementById('absLoading').style.display = 'none';
+        absAllRows = (result && result.rows ? result.rows : []).sort(function(a,b){
+          var da = a.start_date ? new Date(a.start_date) : new Date(0);
+          var db = b.start_date ? new Date(b.start_date) : new Date(0);
+          return db - da;
+        });
+        absLoaded = true;
+        buildAbsenceFilters();
+        applyAbsenceFilters();
+        document.getElementById('absLastRefresh').textContent =
+          'Refreshed: ' + new Date().toLocaleTimeString('en-MY');
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('absLoading').style.display = 'none';
+        document.getElementById('absNoData').textContent = 'Failed to load: ' + (err.message || err);
+        document.getElementById('absNoData').style.display = 'block';
+      })
+      .getAllAbsenceData();
+  }
+
+  function buildAbsenceFilters() {
+    var existingDesigs = absUnique('designation');
+    var ordered = DESIG_ORDER.filter(function(d){ return existingDesigs.indexOf(d) !== -1; });
+    existingDesigs.forEach(function(d){ if (ordered.indexOf(d) === -1) ordered.push(d); });
+    absPopulateFilter('absFilterDesig', ordered);
+    absPopulateFilter('absFilterYear', absUnique('start_year').sort().reverse());
+  }
+  function absUnique(field) {
+    var seen = {}, out = [];
+    absAllRows.forEach(function(r) {
+      var val = (r[field] || '').trim();
+      if (val && !seen[val]) { seen[val] = 1; out.push(val); }
+    });
+    return out.sort();
+  }
+  function absPopulateFilter(id, values) {
+    var sel = document.getElementById(id), first = sel.options[0];
+    sel.innerHTML = ''; sel.appendChild(first);
+    values.forEach(function(val) {
+      var opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; sel.appendChild(opt);
+    });
+  }
+  function applyAbsenceFilters() {
+    var fDesig  = document.getElementById('absFilterDesig').value;
+    var fYear   = document.getElementById('absFilterYear').value;
+    var fType   = document.getElementById('absFilterType').value;
+    var fSearch = document.getElementById('absSearch').value.toLowerCase().trim();
+    absFilteredRows = absAllRows.filter(function(r) {
+      if (fDesig && (r.designation || '').trim() !== fDesig) return false;
+      if (fYear  && String(r.start_year || '').trim() !== fYear) return false;
+      if (fType  && (r.type || '').trim() !== fType) return false;
+      if (fSearch) {
+        var hay = ((r.full_name || '') + ' ' + (r.staff_no || '')).toLowerCase();
+        if (hay.indexOf(fSearch) === -1) return false;
+      }
+      return true;
+    });
+    renderAbsenceTable(absFilteredRows);
+    var totalDays = 0;
+    absFilteredRows.forEach(function(r) { totalDays += parseFloat(r.days) || 0; });
+    document.getElementById('absStatTotal').textContent    = absAllRows.length;
+    document.getElementById('absStatFiltered').textContent = absFilteredRows.length;
+    document.getElementById('absStatDays').textContent     = totalDays % 1 === 0 ? totalDays : totalDays.toFixed(1);
+    document.getElementById('absResultCount').textContent  = absFilteredRows.length + ' of ' + absAllRows.length + ' records';
+  }
+  function clearAbsenceFilters() {
+    ['absFilterDesig','absFilterYear','absFilterType'].forEach(function(id){ document.getElementById(id).value = ''; });
+    document.getElementById('absSearch').value = '';
+    applyAbsenceFilters();
+  }
+  function renderAbsenceTable(rows) {
+    var tbody = document.getElementById('absTableBody');
+    var noData = document.getElementById('absNoData');
+    var table  = document.getElementById('absTable');
+    if (!rows.length) {
+      tbody.innerHTML = ''; table.style.display = 'none';
+      noData.textContent = 'No records found.'; noData.style.display = 'block';
+      return;
+    }
+    noData.style.display = 'none';
+    var html = '';
+    for (var i = 0; i < rows.length; i++) html += buildAbsenceRow(rows[i], i + 1);
+    tbody.innerHTML = html; table.style.display = '';
+  }
+  function absTypeBadge(type) {
+    if (!type || !String(type).trim()) return dash();
+    var t = String(type).trim(), cls = 'abs-other', tl = t.toLowerCase();
+    if (tl === 'medical leave') cls = 'abs-medical';
+    else if (tl === 'hospitalisation' || tl === 'hospitalization') cls = 'abs-hosp';
+    else if (tl === 'emergency leave') cls = 'abs-emergency';
+    else if (tl === 'quarantine') cls = 'abs-quarantine';
+    return '<span class="abs-badge ' + cls + '">' + t + '</span>';
+  }
+  function buildAbsenceRow(r, idx) {
+    var start  = r.start_date ? (fmtDate(r.start_date) || r.start_date) : '—';
+    var end    = r.end_date   ? (fmtDate(r.end_date)   || r.end_date)   : '—';
+    var days   = r.days ? r.days : '—';
+    var period = start + ' – ' + end + '<br><span style="font-size:10px;color:#6b7280;font-weight:600">' + days + ' day' + (days !== 1 ? 's' : '') + '</span>';
+    var tdBase = 'padding:9px 12px;border-bottom:1px solid #f3f4f6;border-right:1px solid #f3f4f6;vertical-align:middle;background:#fff;font-size:12px;color:#1f2937;white-space:nowrap;';
+    var trHover = 'onmouseover="this.querySelectorAll(\'td\').forEach(function(td){td.style.background=\'#f8f9fa\'})" onmouseout="this.querySelectorAll(\'td\').forEach(function(td){td.style.background=\'#fff\'})"';
+    return '<tr ' + trHover + '>' +
+      '<td style="' + tdBase + 'text-align:center;font-size:11px;color:#9ca3af;position:sticky;left:0;z-index:5;width:44px;min-width:44px;max-width:44px">' + idx + '</td>' +
+      '<td class="abs-sb1" style="' + tdBase + 'font-weight:600;position:sticky;left:44px;z-index:5;box-shadow:3px 0 6px -2px rgba(0,0,0,0.08);min-width:220px;width:220px;max-width:220px;overflow:hidden;text-overflow:ellipsis">' + (v(r.full_name) || '—') + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:90px">' + (v(r.staff_no)  || '—') + '</td>' +
+      '<td style="' + tdBase + 'text-align:center">' + desigBadge(r.designation) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center">' + period + '</td>' +
+      '<td style="' + tdBase + 'text-align:center">' + absTypeBadge(r.type) + '</td>' +
+      '<td style="' + tdBase + 'white-space:normal;max-width:220px">' + (v(r.remarks) || dash()) + '</td>' +
+      '<td style="' + tdBase + '">' + (v(r.immediate_superior) || dash()) + '</td>' +
+      '</tr>';
+  }
+  // ── Disciplinary ──────────────────────────────────────────────────────────────
+  var discAllRows = [], discFilteredRows = [];
+
+  function loadDisc() {
+    document.getElementById('discLoading').style.display = 'block';
+    document.getElementById('discTable').style.display   = 'none';
+    document.getElementById('discNoData').style.display  = 'none';
+    google.script.run
+      .withSuccessHandler(function(result) {
+        document.getElementById('discLoading').style.display = 'none';
+        discAllRows = (result && result.rows ? result.rows : []).sort(function(a, b) {
+          var da = a.date ? new Date(a.date) : new Date(0);
+          var db = b.date ? new Date(b.date) : new Date(0);
+          return db - da;
+        });
+        discLoaded = true;
+        buildDiscFilters();
+        applyDiscFilters();
+        document.getElementById('discLastRefresh').textContent =
+          'Refreshed: ' + new Date().toLocaleTimeString('en-MY');
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('discLoading').style.display = 'none';
+        document.getElementById('discNoData').textContent = 'Failed to load: ' + (err.message || err);
+        document.getElementById('discNoData').style.display = 'block';
+      })
+      .getAllDiscData();
+  }
+
+  function buildDiscFilters() {
+    var existingDesigs = discUnique('designation');
+    var ordered = DESIG_ORDER.filter(function(d){ return existingDesigs.indexOf(d) !== -1; });
+    existingDesigs.forEach(function(d){ if (ordered.indexOf(d) === -1) ordered.push(d); });
+    discPopulateFilter('discFilterDesig',   ordered);
+    discPopulateFilter('discFilterSection', discUnique('section'));
+    discPopulateFilter('discFilterYear',    discUnique('year').sort().reverse());
+    discPopulateFilter('discFilterType',    discUnique('type'));
+  }
+  function discUnique(field) {
+    var seen = {}, out = [];
+    discAllRows.forEach(function(r) {
+      var val = (r[field] || '').trim();
+      if (val && !seen[val]) { seen[val] = 1; out.push(val); }
+    });
+    return out.sort();
+  }
+  function discPopulateFilter(id, values) {
+    var sel = document.getElementById(id), first = sel.options[0];
+    sel.innerHTML = ''; sel.appendChild(first);
+    values.forEach(function(val) {
+      var opt = document.createElement('option');
+      opt.value = val; opt.textContent = val; sel.appendChild(opt);
+    });
+  }
+  function applyDiscFilters() {
+    var fDesig   = document.getElementById('discFilterDesig').value;
+    var fSection = document.getElementById('discFilterSection').value;
+    var fYear    = document.getElementById('discFilterYear').value;
+    var fType    = document.getElementById('discFilterType').value;
+    var fSearch  = document.getElementById('discSearch').value.toLowerCase().trim();
+    discFilteredRows = discAllRows.filter(function(r) {
+      if (fDesig   && (r.designation || '').trim() !== fDesig)            return false;
+      if (fSection && (r.section     || '').trim() !== fSection)          return false;
+      if (fYear    && String(r.year  || '').trim()  !== fYear)            return false;
+      if (fType    && (r.type        || '').trim() !== fType)             return false;
+      if (fSearch) {
+        var hay = ((r.name || '') + ' ' + (r.staff_no || '') + ' ' + (r.reference_no || '')).toLowerCase();
+        if (hay.indexOf(fSearch) === -1) return false;
+      }
+      return true;
+    });
+    renderDiscTable(discFilteredRows);
+    var uniqueStaff = {}, totalWarning = 0, totalReprimand = 0;
+    discFilteredRows.forEach(function(r) {
+      if (r.staff_no) uniqueStaff[r.staff_no] = 1;
+      var tl = (r.type || '').toLowerCase();
+      if (tl.indexOf('warning')   !== -1) totalWarning++;
+      if (tl.indexOf('reprimand') !== -1) totalReprimand++;
+    });
+    document.getElementById('discStatTotal').textContent      = discAllRows.length;
+    document.getElementById('discStatFiltered').textContent   = discFilteredRows.length;
+    document.getElementById('discStatYear').textContent       = Object.keys(uniqueStaff).length;
+    document.getElementById('discStatWarning').textContent    = totalWarning;
+    document.getElementById('discStatReprimand').textContent  = totalReprimand;
+    document.getElementById('discResultCount').textContent    = discFilteredRows.length + ' of ' + discAllRows.length + ' records';
+  }
+  function clearDiscFilters() {
+    ['discFilterDesig','discFilterSection','discFilterYear','discFilterType'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('discSearch').value = '';
+    applyDiscFilters();
+  }
+  function renderDiscTable(rows) {
+    var tbody  = document.getElementById('discTableBody');
+    var noData = document.getElementById('discNoData');
+    var table  = document.getElementById('discTable');
+    if (!rows.length) {
+      tbody.innerHTML = ''; table.style.display = 'none';
+      noData.textContent = 'No records found.'; noData.style.display = 'block';
+      return;
+    }
+    noData.style.display = 'none';
+    var html = '';
+    for (var i = 0; i < rows.length; i++) html += buildDiscRow(rows[i], i + 1);
+    tbody.innerHTML = html; table.style.display = '';
+  }
+  function discTypeBadge(type) {
+    if (!type || !String(type).trim()) return dash();
+    var t = String(type).trim(), cls = 'disc-other', tl = t.toLowerCase();
+    if (tl.indexOf('warning') !== -1)                                               cls = 'disc-warning';
+    else if (tl.indexOf('reprimand') !== -1)                                        cls = 'disc-reprimand';
+    else if (tl.indexOf('show cause') !== -1 || tl.indexOf('show-cause') !== -1)   cls = 'disc-show-cause';
+    else if (tl.indexOf('suspension') !== -1)                                       cls = 'disc-suspension';
+    else if (tl.indexOf('dismiss') !== -1 || tl.indexOf('termination') !== -1)     cls = 'disc-dismissal';
+    return '<span class="disc-badge ' + cls + '">' + t + '</span>';
+  }
+  function buildDiscRow(r, idx) {
+    var tdBase   = 'padding:9px 12px;border-bottom:1px solid #f3f4f6;border-right:1px solid #f3f4f6;vertical-align:middle;background:#fff;font-size:12px;color:#1f2937;white-space:nowrap;';
+    var trHover  = 'onmouseover="this.querySelectorAll(\'td\').forEach(function(td){td.style.background=\'#f8f8f8\'})" onmouseout="this.querySelectorAll(\'td\').forEach(function(td){td.style.background=\'#fff\'})"';
+    var dateVal  = r.date ? (fmtDate(r.date) || r.date) : '—';
+    return '<tr ' + trHover + '>' +
+      '<td style="' + tdBase + 'text-align:center;font-size:11px;color:#9ca3af;width:44px;min-width:44px;max-width:44px">' + idx + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:130px;font-weight:600;color:#4b5563">' + (v(r.reference_no) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:60px">' + (v(r.year) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:100px">' + dateVal + '</td>' +
+      '<td style="' + tdBase + 'font-weight:600;min-width:220px;width:220px;max-width:220px;overflow:hidden;text-overflow:ellipsis">' + (v(r.name) || '—') + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:90px">'  + (v(r.staff_no) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:150px">' + desigBadge(r.designation) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:80px">'  + (v(r.section) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:140px">' + discTypeBadge(r.type) + '</td>' +
+      '<td style="' + tdBase + 'white-space:normal;min-width:330px;max-width:400px">' + (v(r.reason) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:130px">' + (v(r.issued_by) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'text-align:center;min-width:90px;max-width:110px;white-space:normal">'  + (v(r.reference) || dash()) + '</td>' +
+      '<td style="' + tdBase + 'white-space:normal;min-width:180px;max-width:220px">' + (v(r.action) || dash()) + '</td>' +
+      '</tr>';
+  }
+  // ── Admin / MAB Modal ─────────────────────────────────────────────────────────
+  function openAdminModal() {
+    var r = changeModalRow;
+    if (!r) return;
+    document.getElementById('adminModalSubtitle').textContent =
+      (v(r.full_name) || '—') + (v(r.staff_no) ? '  ·  ' + v(r.staff_no) : '');
+    // Reset status
+    var status = document.getElementById('mabStatus');
+    status.style.display = 'none'; status.innerHTML = '';
+    // Re-enable buttons
+    ['mabNewBtn','mabRenewalBtn'].forEach(function(id) {
+      var btn = document.getElementById(id);
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    });
+    document.getElementById('adminModalOverlay').classList.add('show');
+  }
+
+  function closeAdminModal() {
+    document.getElementById('adminModalOverlay').classList.remove('show');
+  }
+
+  function generateMabDoc(type) {
+    var r = changeModalRow;
+    if (!r) return;
+
+    var newBtn     = document.getElementById('mabNewBtn');
+    var renewalBtn = document.getElementById('mabRenewalBtn');
+    var status     = document.getElementById('mabStatus');
+
+    [newBtn, renewalBtn].forEach(function(btn) {
+      if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    });
+
+    status.style.display = 'block';
+    status.innerHTML = '<div style="color:#6b7280">⏳ Generating document, please wait…</div>';
+
+    var todayStr = new Date().toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'2-digit' });
+
+    var payload = {
+      type:    type,
+      name:    v(r.full_name)     || '',
+      staffNo: v(r.staff_no)      || '',
+      ic:      v(r.ic_no)         || '',
+      date:    todayStr
+    };
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result && result.success) {
+          var pdfIcon = '<svg style="width:15px;height:15px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>';
+          status.innerHTML =
+            '<div style="color:#166534;margin-bottom:8px">Document generated successfully!</div>' +
+            '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px 14px">' +
+              '<a href="' + result.pdfUrl + '" target="_blank" style="display:inline-flex;align-items:center;color:#374151;font-weight:400;text-decoration:none;font-size:13px">' +
+                pdfIcon + 'Open PDF in Drive' +
+              '</a>' +
+            '</div>';
+        } else {
+          status.innerHTML = '<span style="color:#dc2626">❌ Error: ' + (result ? result.message : 'Unknown error') + '</span>';
+          [newBtn, renewalBtn].forEach(function(btn) {
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+          });
+        }
+      })
+      .withFailureHandler(function(err) {
+        status.innerHTML = '<span style="color:#dc2626">❌ Failed: ' + (err.message || String(err)) + '</span>';
+        [newBtn, renewalBtn].forEach(function(btn) {
+          if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        });
+      })
+      .generateMabDocument(payload);
+  }
+</script>
+</body>
+</html>
