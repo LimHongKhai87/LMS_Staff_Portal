@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matrix | ADE KUL</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f6fa;color:#1a1d23;font-size:13px;-webkit-font-smoothing:antialiased}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#fff;position:fixed;inset:0;z-index:200}
+.loading-screen.hide{display:none}
+.spinner{border:4px solid #e5e7eb;border-top:4px solid #6b7280;border-radius:50%;width:50px;height:50px;animation:spin .8s linear infinite}
+.loading-screen p{margin-top:16px;color:#6b7280;font-weight:500;font-size:14px}
+
+.topbar{background:#fff;border-bottom:1px solid #eef2f7;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tb-left{display:flex;align-items:center;gap:12px}
+.tb-badge{background:#eef2ff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;color:#6366f1;letter-spacing:.4px}
+.tb-title{font-size:15px;font-weight:700;color:#1a1d23}
+.tb-sub{font-size:11px;color:#8a92a6;margin-top:1px}
+.tb-right{display:flex;align-items:center;gap:8px}
+.nav-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e5e9f0;background:#fff;color:#6b7280;font-family:inherit;transition:all .15s;white-space:nowrap}
+.nav-btn:hover{border-color:#6366f1;color:#6366f1;background:#f5f3ff}
+.content{padding:20px 28px 48px;overflow:visible}@media(max-width:768px){.content{padding:12px 0 40px}.table-card,.filter-card{border-radius:0;border-left:none;border-right:none}.tab-row{padding:0 12px}.sec-hdr{padding:0 12px}.kpi-strip{padding:0 12px}}
+.sec-hdr{display:flex;align-items:center;gap:12px;margin:24px 0 14px}
+.sec-hdr:first-child{margin-top:0}
+.sec-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#b0b7c3;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:#eef2f7}
+.kpi-strip{display:flex;gap:12px;flex-wrap:wrap}
+.kpi-tile{background:#fff;border-radius:14px;padding:16px 18px;flex:1;min-width:100px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #f0f2f8}
+.kpi-icon-ring{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.kpi-icon-ring svg{width:17px;height:17px}
+.kpi-num{font-size:24px;font-weight:800;line-height:1;letter-spacing:-1.5px;margin-bottom:3px}
+.kpi-lbl{font-size:11px;color:#8a92a6;font-weight:500}
+.tab-row{display:flex;gap:8px}
+.tab-btn{padding:9px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid #e5e9f0;background:#fff;color:#8a92a6;font-family:inherit;transition:all .18s;display:flex;align-items:center;gap:8px}
+.tab-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab-btn:hover{border-color:#6366f1;color:#4f46e5;background:#f5f3ff}
+.tab-btn.active{background:#6366f1;color:#fff;border-color:#6366f1;box-shadow:0 4px 12px rgba(99,102,241,.3)}
+.filter-card{background:#fff;border-radius:14px;padding:16px 20px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #f0f2f8;margin-bottom:16px}
+.filter-row{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:10px}
+.filter-row:last-child{margin-bottom:0}
+.filter-group{display:flex;flex-direction:column;gap:5px}
+.fgl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a92a6}
+.filter-pills{display:flex;flex-wrap:wrap;gap:5px}
+.fpill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1.5px solid #e5e9f0;background:#fff;font-size:11px;font-weight:600;color:#6b7280;cursor:pointer;transition:all .15s;user-select:none}
+.fpill:hover{border-color:#a5b4fc;color:#4f46e5}
+.fpill.active{background:#eef2ff;border-color:#6366f1;color:#4f46e5}
+.fpill input{display:none}
+.fdivider{width:1px;background:#eef2f7;align-self:stretch;margin:2px 0}
+.search-box{padding:6px 12px;border:1.5px solid #e5e9f0;border-radius:8px;font-size:12px;font-family:inherit;color:#1a1d23;width:400px;background:#f8f9fd;transition:border-color .15s}
+.search-box:focus{outline:none;border-color:#6366f1;background:#fff}
+.btn-clear{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid #e5e9f0;background:#fff;color:#8a92a6;font-family:inherit;transition:all .15s;align-self:flex-end}
+.btn-clear:hover{border-color:#ef4444;color:#ef4444}
+.result-info{font-size:11px;color:#8a92a6;align-self:center;white-space:nowrap}
+.table-card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #f0f2f8;overflow:hidden}
+.table-wrap{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 360px)}
+table{border-collapse:separate;border-spacing:0;font-size:11px;min-width:max-content;width:100%}
+thead th{background:#f8f9fd;border-bottom:1px solid #eef2f7;position:sticky;z-index:50;padding:0 10px;height:34px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#8a92a6;white-space:nowrap;text-align:left;border-right:1px solid #f0f2f8}
+thead tr.grp-row th{height:28px;font-size:9px;font-weight:700;color:#fff;text-align:center;border-right:1px solid rgba(255,255,255,.15);top:0}
+thead tr.field-row th{top:28px}
+.rot-th{writing-mode:vertical-rl;transform:rotate(180deg);height:110px;padding:8px 4px;vertical-align:bottom;font-size:9px;max-width:30px;min-width:30px;text-align:left;white-space:normal;word-break:break-word}
+
+/* ─── Sticky identity column widths ─────────────────────────────────────── */
+.sc-name{position:sticky;left:0;z-index:40;background:#fff;width:270px;min-width:270px;max-width:270px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.sc-appr{background:#fff;min-width:85px;max-width:85px;font-size:10px;color:#8a92a6}
+.sc-sec{background:#fff;min-width:50px;max-width:50px;border-right:2px solid #e5e9f0 !important}
+.sc-sno{background:#fff;min-width:75px;max-width:75px;font-size:10px;color:#8a92a6}
+thead th.sc-sno{z-index:61;background:#f8f9fd}
+thead th.sc-name,thead th.sc-appr,thead th.sc-sec{z-index:61;background:#f8f9fd}
+
+tbody td{padding:8px 10px;border-bottom:1px solid #f5f6fa;border-right:1px solid #f5f6fa;vertical-align:middle;background:#fff;white-space:nowrap}
+tbody tr:hover td{background:#f8f9fd}
+tbody tr:hover td.sc-name,tbody tr:hover td.sc-appr,tbody tr:hover td.sc-sec{background:#eef2ff}
+td.dot-cell{text-align:center;width:56px;min-width:56px;max-width:56px;padding:2px}
+.dot-y{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center}
+.dot-y::after{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+.dot-n{display:inline-flex;width:18px;height:18px;border-radius:50%;background:#f0f2f8}
+
+.cat-badge{display:inline-flex;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;margin-right:2px}
+.cb-b1{background:#eef2ff;color:#4f46e5}.cb-b2{background:#f5f3ff;color:#7c3aed}
+.cb-c{background:#ecfdf5;color:#065f46}.cb-a1{background:#fffbeb;color:#92400e}
+.sec-nb{display:inline-flex;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;background:#fbbf24;color:#fff}
+.sec-wb{display:inline-flex;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;background:#2563eb;color:#fff}
+.no-data{padding:60px;text-align:center;color:#8a92a6;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loaderOverlay">
+  <div class="spinner"></div>
+  <p id="loaderMsg">Loading approval matrix...</p>
+</div>
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-badge">ADE KUL</div>
+    <div><div class="tb-title">Matrix</div><div class="tb-sub">Part 145 -- Certifying Staff</div></div>
+  </div>
+  <div class="tb-right">
+    <button class="nav-btn" onclick="nav('landing')">&#8592; Landing</button>
+    <button class="nav-btn" onclick="nav('dashboard')">Staff Dashboard</button>
+    <button class="nav-btn" onclick="nav('analytics')">Analytics</button>
+  </div>
+</div>
+<div class="content">
+  <div id="statsBar" style="background:#fff;border-bottom:1px solid #eef2f7;padding:8px 28px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin:-20px -28px 0;"></div>
+  <div class="sec-hdr" style="margin-top:0"><span class="sec-lbl">View Mode</span><div class="sec-line"></div></div>
+  <div class="tab-row">
+    <button class="tab-btn active" id="tabTypeRating" onclick="switchTab('typeRating')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Type Rating
+    </button>
+    <!-- CHANGE 1: "Foreign Authority" → "Authority" -->
+    <button class="tab-btn" id="tabAuthority" onclick="switchTab('authority')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Authority
+    </button>
+  </div>
+  <div class="sec-hdr" style="margin-top:16px"><span class="sec-lbl">Filters</span><div class="sec-line"></div></div>
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="filter-group"><div class="fgl">Designation</div><div class="filter-pills" id="fDesig"></div></div>
+      <div class="fdivider"></div>
+      <div class="filter-group"><div class="fgl">Section</div><div class="filter-pills" id="fSection"></div></div>
+      <div class="fdivider" id="fAuthDiv"></div>
+      <div class="filter-group" id="fAuthGrp"><div class="fgl">Authority</div><div class="filter-pills" id="fAuth"></div></div>
+      <div class="fdivider" id="fCatDiv"></div>
+      <div class="filter-group" id="fCatGrp"><div class="fgl">Approval Category</div><div class="filter-pills" id="fCat"></div></div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-group"><div class="fgl">Search</div><input type="text" class="search-box" id="searchBox" placeholder="Name / approval no..." oninput="applyFilters()"></div>
+      <button class="btn-clear" onclick="clearAll()">Clear All</button>
+      <div class="result-info" id="resultInfo"></div>
+    </div>
+  </div>
+  <div id="countBar" style="display:none;background:#fff;border-radius:12px;border:1px solid #f0f2f8;padding:10px 16px;margin-bottom:10px;overflow-x:auto;"></div>
+  <div class="table-card"><div class="table-wrap"><table id="tbl"><thead id="tHead"></thead><tbody id="tBody"></tbody></table></div></div>
+</div>
+<script>
+var DQ = String.fromCharCode(34);
+function h(s){ return s.replace(/[|]/g, DQ); }
+
+// ─── Column width constants ────────────────────────────────────────────────
+var COL_W = {
+  name:      270,
+  nameTR:    230,
+  staffNo:    85,
+  apprNo:     75,
+  sec:        50,
+  pos:       100,
+  cat:        40,
+  data:       56
+};
+function nameW(){ return ACTIVE_TAB === 'typeRating' ? COL_W.nameTR : COL_W.name; }
+var STICKY_LEFT = {
+  name:    0,
+  staffNo: COL_W.name,
+  apprNo:  COL_W.name + COL_W.staffNo,
+  sec:     COL_W.name + COL_W.staffNo + COL_W.apprNo
+};
+
+var STAFF = [];
+var CANONICALS = [
+  {id:'cgk_a320_cfm56_maa',  label:'CGK A320-200 (CFM56-5B) CAAM - MAA'},
+  {id:'cgk_a320_cfm56_iaa',  label:'CGK A320-200 (CFM56-5B) DGCA - IAA'},
+  {id:'cgk_a320_cfm56_paa',  label:'CGK A320-200 (CFM56-5B) CAAP - PAA'},
+  {id:'cgk_a320_cfm56_aac',  label:'CGK A320-200 (CFM56-5B) SSCA - AAC'},
+  {id:'cgk_a320_leap_maa',   label:'CGK A320-200 (CFM LEAP-1A) CAAM - MAA'},
+  {id:'cgk_a320_v2500',      label:'CGK A320-200 (IAE V2500)'},
+  {id:'cgk_a321_cfm56_maa',  label:'CGK A321-200 (CFM56-5B) CAAM - MAA'},
+  {id:'cgk_a321_leap_maa',   label:'CGK A321-200NX (CFM LEAP-1A) CAAM - MAA'},
+  {id:'cgk_a330_rrt_maa',    label:'CGK A330-343 (RRT772B-60) CAAM - MAA'},
+  {id:'cgk_a330_rrt_aax',    label:'CGK A330-343 (RRT772B-60) CAAM - AAX'},
+  {id:'ab_a330_rrt_aax',     label:'AB A330-343 (RRT772B-60) CAAM - AAX'},
+  {id:'cgk_b737_cfm56',      label:'CGK B737-600/700/800/900 (CFM56)'},
+];
+var ACTIVE_TAB = 'typeRating';
+var F = { desig: new Set(), section: new Set(), auth: new Set(), cat: new Set() };
+
+var TR_GROUPS = [
+  {id:'a320', label:'A320', bg:'#1e3a5f', engines:[
+    {id:'A320_CFM56',   eng:'CFM56',   label:'A320 CFM56'},
+    {id:'A320_LEAP-1A', eng:'LEAP-1A', label:'A320 LEAP-1A'},
+    {id:'A320_PW1100',  eng:'PW1100',  label:'A320 PW1100G'},
+    {id:'A320_V2500',   eng:'V2500',   label:'A320 V2500'},
+  ]},
+  {id:'a321', label:'A321', bg:'#1e4a6f', engines:[
+    {id:'A321_CFM56',   eng:'CFM56',   label:'A321 CFM56'},
+    {id:'A321_LEAP-1A', eng:'LEAP-1A', label:'A321 LEAP-1A'},
+    {id:'A321_PW1100',  eng:'PW1100',  label:'A321 PW1100G'},
+    {id:'A321_V2500',   eng:'V2500',   label:'A321 V2500'},
+  ]},
+  {id:'a330', label:'A330', bg:'#14532d', engines:[
+    {id:'A330_RRT772B-60', eng:'RRT772B-60', label:'A330 RRT772B'},
+    {id:'A330_GE CF6',     eng:'GE CF6',     label:'A330 GE CF6'},
+  ]},
+  {id:'b737', label:'B737', bg:'#4c1d2a', engines:[
+    {id:'B737_classic', eng:'classic', label:'Classic', isB737:true, dataKey:'b737'},
+    {id:'B737_ng',      eng:'ng',      label:'NG',      isB737:true, dataKey:'b737'},
+    {id:'B737_max',     eng:'max',     label:'MAX',     isB737:true, dataKey:'b737'},
+  ]},
+  {id:'a350', label:'A350', bg:'#6b21a8', engines:[
+    {id:'A350_TRXWB', eng:'TRXWB', label:'A350 Trent XWB', isB737:true, dataKey:'a350'},
+  ]},
+];
+// AUTH_GROUPS aligned to QN-G-017 Rev 02 (05 Dec 2025)
+var AUTH_GROUPS = [
+  // Table 1 — Malaysia
+  {label:'CAAM',         nation:'Malaysia',    bg:'#1e3a5f', cols:[{id:'MAA',        label:'MAA'},{id:'AAX',       label:'AAX'}]},
+  // Table 2 — Indonesia  (TNU = TransNusa per QN-G-017)
+  {label:'DGCA Indonesia',nation:'Indonesia',  bg:'#4c1d2a', cols:[{id:'IAA',        label:'IAA'},{id:'TNU',       label:'TNU'}]},
+  // Table 3 — Philippines  (PAA only per QN-G-017; PAL & Cebu removed)
+  {label:'CAAP',         nation:'Philippines', bg:'#312e81', cols:[{id:'PAA',        label:'PAA'}]},
+  // Table 4 — Singapore
+  {label:'CAAS',         nation:'Singapore',   bg:'#1c2526', cols:[{id:'Scoot',      label:'Scoot'}]},
+  // Table 5 — Thailand
+  {label:'CAAT',         nation:'Thailand',    bg:'#14532d', cols:[{id:'TAA',        label:'TAA'}]},
+  // Table 6 — Nepal
+  {label:'CAAN',         nation:'Nepal',       bg:'#27272a', cols:[{id:'HIM',        label:'HIM'}]},
+  // Table 7 — Myanmar  (MAI = Myanmar Airways Intl per QN-G-017)
+  {label:'DCAM',         nation:'Myanmar',     bg:'#102020', cols:[{id:'MAI',        label:'MAI'}]},
+  // Table 8 — India  (IGO = Indigo per QN-G-017)
+  {label:'DGCA India',   nation:'India',       bg:'#2a1a2e', cols:[{id:'IGO',        label:'IGO'}]},
+  // Table 9 — Cambodia  (KME = Cambodia Airways per QN-G-017)
+  {label:'SSCA',         nation:'Cambodia',    bg:'#1a2030', cols:[{id:'AAC',        label:'AAC'},{id:'KME',       label:'KME'}]},
+  // Table 10 — Bermuda
+  {label:'BCAA',         nation:'Bermuda',     bg:'#1a3020', cols:[{id:'HKJ',        label:'HKJ'}]},
+  // Table 11 — Bhutan  (DRK = Druk Air; authority = BCAA Bhutan per QN-G-017)
+  {label:'BCAA Bhutan',  nation:'Bhutan',      bg:'#1c2318', cols:[{id:'DRK',        label:'DRK'}]},
+  // Table 12 — EASA  (AFI = Air France per QN-G-017)
+  {label:'EASA',         nation:'Europe',      bg:'#10102a', cols:[{id:'AFI',        label:'AFI'}]},
+  // Table 14 — Vietnam  (SPA = Sun PhuQuoc Airways per QN-G-017)
+  {label:'CAAV',         nation:'Vietnam',     bg:'#1a3a3a', cols:[{id:'SPA',        label:'SPA'}]},
+  // Table 15 — Guernsey
+  {label:'ODCA',         nation:'Guernsey',    bg:'#2a1520', cols:[{id:'Castlelake', label:'Castlelake'}]},
+  // Table 16 — Pakistan (Reserved — authority column retained for future use, no operator cols)
+  {label:'PCAA',         nation:'Pakistan',    bg:'#2a2010', cols:[]},
+];
+var CODE_COLORS = {
+  A:'#6366f1', B:'#3b82f6', C:'#10b981',
+  G:'#f59e0b', K:'#f97316', M:'#ec4899', T:'#8b5cf6'
+};
+
+// ─── CHANGE 3: Engine type shortener ──────────────────────────────────────
+// Applied to authority cell text before rendering
+function shortenEngineType(text){
+  if(!text) return text;
+  return text
+    .replace(/\(CFM56[-\w]*\)/g,      '(CFM56)')
+    .replace(/\(CFM LEAP[-\w]*\)/gi,  '(Leap)')
+    .replace(/\(IAE PW\d+\w*\)/gi,    '(PW110)')
+    .replace(/\(IAE V2500\)/gi,        '(V2500)')
+    .replace(/\(RRT[-\w.]*\)/gi,       '(Trent)')
+    .replace(/\(GE CF6[-\w]*\)/gi,     '(CF6)');
+}
+
+function nav(page){
+  try{
+    google.script.run.withSuccessHandler(function(u){
+      window.top.location.href = page === 'landing' ? u : u + '?page=' + page;
+    }).getScriptUrl();
+  } catch(ex){ window.location.href = '?page=' + page; }
+}
+function showLoader(msg){ var el=document.getElementById('loaderOverlay'); el.classList.remove('hide'); document.getElementById('loaderMsg').textContent=msg||'Loading approval matrix...'; }
+function hideLoader(){ document.getElementById('loaderOverlay').classList.add('hide'); }
+
+window.addEventListener('DOMContentLoaded', function(){
+  showLoader('Loading approval matrix data...');
+  document.addEventListener('change', function(e){
+    var inp=e.target;
+    if(inp.tagName==='INPUT'&&inp.type==='checkbox'&&inp.closest('.fpill')){
+      var key=inp.getAttribute('data-key'), val=inp.value;
+      if(!key) return;
+      if(inp.checked){ F[key].add(val); inp.closest('.fpill').classList.add('active'); }
+      else { F[key].delete(val); inp.closest('.fpill').classList.remove('active'); }
+      applyFilters();
+    }
+  });
+  google.script.run
+    .withSuccessHandler(function(result){
+      var raw=result.staff||[];
+      STAFF=raw.filter(function(s){ return /^ADE/i.test((s.approNo||'').trim()); });
+      hideLoader();
+      buildKpis();
+      buildFilters();
+      switchTab('typeRating');
+      var sn=document.getElementById('sheetName');
+      if(sn) sn.textContent=result.sheetName?'Sheet: '+result.sheetName:'';
+    })
+    .withFailureHandler(function(e){
+      hideLoader();
+      var ed=document.createElement('div');
+      ed.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px';
+      var eh=document.createElement('h2'); eh.textContent='Access Denied'; eh.style.color='#dc2626';
+      var ep=document.createElement('p'); ep.textContent=e.message||String(e); ep.style.color='#6b7280';
+      document.body.innerHTML=''; document.body.appendChild(ed); ed.appendChild(eh); ed.appendChild(ep);
+    })
+    .getApprovalMatrixData();
+});
+
+function buildKpis(){
+  var s=STAFF;
+  function parseCodes(val){ if(!val) return []; return val.split(',').map(function(c){return c.trim();}).filter(function(c){return c;}); }
+  function hasAll(codes,arr){ return arr.every(function(x){return codes.indexOf(x)!==-1;}); }
+  var b1FullOnly=0,b1LtdOnly=0,b2FullOnly=0,b2LtdOnly=0,b1b2=0,catAOnly=0,ab2=0;
+  s.forEach(function(st){
+    var codes=parseCodes(st.approCat);
+    var hasB1=hasAll(codes,['A','B']); var hasB1Full=hasB1&&codes.indexOf('C')!==-1; var hasB1Ltd=hasB1&&codes.indexOf('C')===-1;
+    var hasB2Full=hasAll(codes,['C','G','K']);
+    var hasB2Ltd=!hasB1&&((codes.indexOf('C')!==-1&&codes.indexOf('G')===-1&&codes.indexOf('K')===-1)||(codes.indexOf('C')!==-1&&codes.indexOf('G')!==-1&&codes.indexOf('K')===-1)||(codes.indexOf('G')!==-1&&codes.indexOf('K')!==-1&&codes.indexOf('C')===-1));
+    var hasB2=hasB2Full||hasB2Ltd; var hasA=codes.indexOf('M')!==-1;
+    if(hasB1&&hasB2) b1b2++; else if(hasA&&hasB2) ab2++; else if(hasB1Full) b1FullOnly++; else if(hasB1Ltd) b1LtdOnly++; else if(hasB2Full) b2FullOnly++; else if(hasB2Ltd) b2LtdOnly++; else if(hasA) catAOnly++;
+  });
+  var items=[
+    {l:'Total',v:s.length,c:'#1f2937'},{l:'B1 Full',v:b1FullOnly,c:'#4f46e5'},{l:'B1 Ltd',v:b1LtdOnly,c:'#4f46e5'},
+    {l:'B2 Full',v:b2FullOnly,c:'#7c3aed'},{l:'B2 Ltd',v:b2LtdOnly,c:'#7c3aed'},
+    {l:'B1 + B2',v:b1b2,c:'#1d4ed8'},{l:'Cat A',v:catAOnly,c:'#b45309'},{l:'A + B2',v:ab2,c:'#b45309'},
+  ];
+  var bar=document.getElementById('statsBar'); if(!bar) return; bar.innerHTML='';
+  items.forEach(function(item,i){
+    if(i>0){ var dv=document.createElement('div'); dv.style.cssText='width:1px;background:#eef2f7;align-self:stretch;margin:2px 0'; bar.appendChild(dv); }
+    var w=document.createElement('div'); w.style.cssText='display:flex;flex-direction:column;cursor:default';
+    var vl=document.createElement('div'); vl.style.cssText='font-size:18px;font-weight:800;color:'+item.c+';line-height:1.2'; vl.textContent=item.v;
+    var lb=document.createElement('div'); lb.style.cssText='font-size:10px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:2px'; lb.textContent=item.l;
+    w.appendChild(vl); w.appendChild(lb); bar.appendChild(w);
+  });
+}
+
+function buildPills(containerId,opts,key){
+  document.getElementById(containerId).innerHTML=opts.map(function(o){
+    var active=F[key].has(o)?' active':'';
+    var lbl=document.createElement('label'); lbl.className='fpill'+active;
+    var inp=document.createElement('input'); inp.type='checkbox'; inp.value=o; inp.setAttribute('data-key',key);
+    if(active) inp.checked=true; lbl.appendChild(inp); lbl.appendChild(document.createTextNode(o));
+    return lbl.outerHTML;
+  }).join('');
+}
+function buildFilters(){
+  buildPills('fDesig',['Manager','Lead Engineer Ops','Lead Engineer','LAE - B1','LAE - B2','Technician - Cat A'],'desig');
+  buildPills('fSection',['NB','WB'],'section');
+}
+function updateDynFilters(){
+  var ag=document.getElementById('fAuthGrp'),ad=document.getElementById('fAuthDiv');
+  var cg=document.getElementById('fCatGrp'),cd=document.getElementById('fCatDiv');
+  if(ACTIVE_TAB==='typeRating'){
+    ag.style.display='none'; ad.style.display='none'; cg.style.display=''; cd.style.display='';
+    buildPills('fCat',['B1 Full','B1 Ltd','B2 Full','B2 Ltd','Cat A'],'cat');
+  } else if(ACTIVE_TAB==='authority'){
+    ag.style.display=''; ad.style.display=''; cg.style.display='none'; cd.style.display='none';
+    // Only show operator IDs that exist in AUTH_GROUPS AND have at least one staff match
+    var au=[];
+    AUTH_GROUPS.forEach(function(g){
+      g.cols.forEach(function(c){
+        var hasAny=STAFF.some(function(s){ return s.authApprovals&&s.authApprovals[c.id]&&s.authApprovals[c.id].length>0; });
+        if(hasAny) au.push(c.id);
+      });
+    });
+    buildPills('fAuth',au,'auth');
+  } else {
+    ag.style.display=''; ad.style.display=''; cg.style.display=''; cd.style.display='';
+    var au=[];
+    AUTH_GROUPS.forEach(function(g){
+      g.cols.forEach(function(c){
+        var hasAny=STAFF.some(function(s){ return s.authApprovals&&s.authApprovals[c.id]&&s.authApprovals[c.id].length>0; });
+        if(hasAny) au.push(c.id);
+      });
+    });
+    buildPills('fAuth',au,'auth');
+    buildPills('fCat',['B1 Full','B1 Ltd','B2 Full','B2 Ltd','Cat A'],'cat');
+  }
+}
+function switchTab(tab){
+  ACTIVE_TAB=tab;
+  ['typeRating','authority'].forEach(function(t){
+    var btn=document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(btn) btn.classList.toggle('active',t===tab);
+  });
+  F.auth.clear(); F.cat.clear();
+  document.getElementById('searchBox').value='';
+  updateDynFilters(); buildTableHead(); applyFilters();
+}
+function getColDefs(){
+  if(ACTIVE_TAB==='approval') return CANONICALS.map(function(c){return{id:c.id,label:c.label};});
+  if(ACTIVE_TAB==='typeRating'){ var r=[]; TR_GROUPS.forEach(function(g){g.engines.forEach(function(e){r.push(e);});}); return r; }
+  var r=[]; AUTH_GROUPS.forEach(function(g){g.cols.forEach(function(c){r.push(c);})}); return r;
+}
+
+// ─── CHANGE 4: mkFixedTh now supports top offset for sticky-left cells ────
+function mkFixedTh(label, w, opts){
+  var th = document.createElement('th');
+  th.textContent = label;
+  var bg     = opts.bg     || '#1f2937';
+  var color  = opts.color  || '#fff';
+  var height = opts.height || 34;
+  var base  = 'color:'+color+';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;'
+             +'height:'+height+'px;text-align:center;white-space:nowrap;border-right:1px solid rgba(255,255,255,.15);'
+             +'width:'+w+'px;min-width:'+w+'px;max-width:'+w+'px;padding:0 4px;background:'+bg+';';
+  if(opts.sticky){
+    // Sticky-left: honour both left AND top so it locks in the correct row
+    base += 'position:sticky;left:'+(opts.left||0)+'px;top:'+(opts.top||0)+'px;z-index:71;';
+  } else {
+    base += 'position:sticky;top:'+(opts.top||0)+'px;z-index:50;';
+  }
+  th.style.cssText = base;
+  if(opts.className) th.className = opts.className;
+  if(opts.rowspan)   th.setAttribute('rowspan', String(opts.rowspan));
+  return th;
+}
+
+function buildTableHead(){
+  var head=document.getElementById('tHead'); head.innerHTML='';
+
+  function mkTh(text,attrs){
+    var el=document.createElement('th');
+    if(text) el.textContent=text;
+    if(attrs) Object.keys(attrs).forEach(function(k){el.setAttribute(k,attrs[k]);});
+    return el;
+  }
+
+  if(ACTIVE_TAB==='typeRating'){
+    var r1=document.createElement('tr'); r1.className='grp-row';
+
+    r1.appendChild(mkFixedTh('Name',    nameW(),       {sticky:true, left:STICKY_LEFT.name, top:0, className:'sc-name', bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Staff No',COL_W.staffNo, {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Appr No.',COL_W.apprNo,  {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Sec',     COL_W.sec,     {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Pos',     COL_W.pos,     {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Cat',     COL_W.cat,     {top:0, bg:'#1f2937', height:44}));
+
+    TR_GROUPS.forEach(function(g){
+      g.engines.forEach(function(e){
+        var th=document.createElement('th');
+        th.style.cssText='background:'+g.bg+';height:44px;'
+          +'top:0;position:sticky;z-index:50;text-align:center;padding:3px 2px;'
+          +'border-right:1px solid rgba(255,255,255,.15);'
+          +'width:'+COL_W.data+'px;min-width:'+COL_W.data+'px;max-width:'+COL_W.data+'px;'
+          +'vertical-align:middle;line-height:1.2';
+        var acLine=document.createElement('div');
+        acLine.style.cssText='font-size:10px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        acLine.textContent=g.label;
+        var divLine=document.createElement('div');
+        divLine.style.cssText='height:1px;background:rgba(255,255,255,.2);margin:2px 4px';
+        var engLine=document.createElement('div');
+        engLine.style.cssText='font-size:9px;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        engLine.textContent=e.eng;
+        th.appendChild(acLine); th.appendChild(divLine); th.appendChild(engLine);
+        r1.appendChild(th);
+      });
+    });
+    head.appendChild(r1);
+
+  } else if(ACTIVE_TAB==='authority'){
+    // Single-row header — same pattern as Type Rating.
+    // Each operator th shows authority label on top + operator label below,
+    // all at top:0 so there is no double-row sticky conflict.
+    var r1=document.createElement('tr'); r1.className='grp-row';
+
+    r1.appendChild(mkFixedTh('Name',    nameW(),       {sticky:true, left:STICKY_LEFT.name, top:0, className:'sc-name', bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Staff No',COL_W.staffNo, {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Appr No.',COL_W.apprNo,  {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Sec',     COL_W.sec,     {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Pos',     COL_W.pos,     {top:0, bg:'#1f2937', height:44}));
+    r1.appendChild(mkFixedTh('Cat',     COL_W.cat,     {top:0, bg:'#1f2937', height:44}));
+
+    AUTH_GROUPS.forEach(function(g){
+      g.cols.forEach(function(c){
+        var th=document.createElement('th');
+        th.style.cssText='background:'+g.bg+';height:44px;'
+          +'top:0;position:sticky;z-index:50;text-align:center;padding:3px 2px;'
+          +'border-right:1px solid rgba(255,255,255,.15);'
+          +'width:100px;min-width:100px;max-width:100px;'
+          +'vertical-align:middle;line-height:1.2';
+        // Top line: authority label (e.g. "CAAM")
+        var authLine=document.createElement('div');
+        authLine.style.cssText='font-size:10px;font-weight:800;color:#fff;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        authLine.textContent=g.label;
+        // Thin separator
+        var divLine=document.createElement('div');
+        divLine.style.cssText='height:1px;background:rgba(255,255,255,.2);margin:2px 6px';
+        // Bottom line: operator label (e.g. "MAA")
+        var opLine=document.createElement('div');
+        opLine.style.cssText='font-size:9px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        opLine.textContent=c.label;
+        th.appendChild(authLine); th.appendChild(divLine); th.appendChild(opLine);
+        r1.appendChild(th);
+      });
+    });
+    head.appendChild(r1);
+
+  } else {
+    // Approval tab — 2-row sticky header (unchanged)
+    var r1=document.createElement('tr'); r1.className='grp-row';
+    r1.appendChild(mkFixedTh('Name',    nameW(),       {sticky:true, left:STICKY_LEFT.name,    top:0, className:'sc-name', bg:'#1f2937', rowspan:2}));
+    r1.appendChild(mkFixedTh('Staff No',COL_W.staffNo, {sticky:true, left:STICKY_LEFT.staffNo, top:0, bg:'#1f2937', rowspan:2}));
+    r1.appendChild(mkFixedTh('Appr No.',COL_W.apprNo,  {sticky:true, left:STICKY_LEFT.apprNo,  top:0, bg:'#1f2937', rowspan:2}));
+    r1.appendChild(mkFixedTh('Sec',     COL_W.sec,     {sticky:true, left:STICKY_LEFT.sec,     top:0, bg:'#1f2937', rowspan:2}));
+    r1.appendChild(mkFixedTh('Pos',     COL_W.pos,     {top:0, bg:'#1f2937', rowspan:2}));
+    r1.appendChild(mkFixedTh('Cat',     COL_W.cat,     {top:0, bg:'#1f2937', rowspan:2}));
+    var span=document.createElement('th');
+    span.setAttribute('colspan',String(CANONICALS.length));
+    span.style.cssText='background:#312e81;position:sticky;top:0;z-index:50;height:28px;text-align:center;padding:0 4px';
+    span.textContent='CGK -- AirAsia Approvals';
+    r1.appendChild(span);
+    head.appendChild(r1);
+
+    var r2=document.createElement('tr'); r2.className='field-row';
+    getColDefs().forEach(function(c){
+      var lbl=c.label.replace('CGK ','').replace(' CAAM','').replace(' DGCA','').replace(' CAAP','').replace(' SSCA','')
+                     .replace(' - MAA',' MAA').replace(' - IAA',' IAA').replace(' - PAA',' PAA').replace(' - AAC',' AAC');
+      r2.appendChild(mkTh(lbl,{class:'rot-th',title:c.label}));
+    });
+    head.appendChild(r2);
+  }
+}
+
+function applyFilters(){
+  var q=document.getElementById('searchBox').value.toLowerCase().trim();
+  var filtered=STAFF.filter(function(s){
+    if(F.desig.size>0&&!F.desig.has(s.position)) return false;
+    if(F.section.size>0&&!F.section.has(s.section)) return false;
+    if(F.cat.size>0){
+      var ok=false;
+      var codes=(s.approCat||'').split(',').map(function(x){return x.trim();}).filter(function(x){return x;});
+      var hasCode=function(arr){return arr.every(function(x){return codes.indexOf(x)!==-1;});};
+      var isB1=hasCode(['A','B']); var isB1Full=isB1&&codes.indexOf('C')!==-1; var isB1Ltd=isB1&&codes.indexOf('C')===-1;
+      var isB2Full=hasCode(['C','G','K']);
+      var isB2Ltd=!isB1&&((codes.indexOf('C')!==-1&&codes.indexOf('G')===-1&&codes.indexOf('K')===-1)||(codes.indexOf('C')!==-1&&codes.indexOf('G')!==-1&&codes.indexOf('K')===-1)||(codes.indexOf('G')!==-1&&codes.indexOf('K')!==-1&&codes.indexOf('C')===-1));
+      var isCatA=codes.indexOf('M')!==-1;
+      if(F.cat.has('B1 Full')&&isB1Full) ok=true; if(F.cat.has('B1 Ltd')&&isB1Ltd) ok=true;
+      if(F.cat.has('B2 Full')&&isB2Full) ok=true; if(F.cat.has('B2 Ltd')&&isB2Ltd) ok=true;
+      if(F.cat.has('Cat A')&&isCatA) ok=true; if(!ok) return false;
+    }
+    if(F.auth.size>0){ var ok=false; F.auth.forEach(function(a){ if(s.authApprovals&&s.authApprovals[a]&&s.authApprovals[a].length>0) ok=true; }); if(!ok) return false; }
+    if(q&&(s.name+' '+s.approNo).toLowerCase().indexOf(q)===-1) return false;
+    return true;
+  });
+  filtered.sort(function(a,b){ return a.name.localeCompare(b.name); });
+  renderTable(filtered);
+  updateCountBar(filtered);
+  document.getElementById('resultInfo').textContent=filtered.length+' of '+STAFF.length+' staff';
+}
+
+// ─── CHANGE 2: Count bar works for both Type Rating and Authority tabs ─────
+function updateCountBar(data){
+  var bar=document.getElementById('countBar');
+  if(!bar){ return; }
+
+  if(ACTIVE_TAB==='typeRating'){
+    bar.style.display='flex';
+    bar.style.cssText='display:flex;background:#fff;border-radius:12px;border:1px solid #f0f2f8;padding:8px 16px;margin-bottom:10px;overflow-x:auto;gap:0;flex-wrap:nowrap;align-items:stretch';
+    var groups=[];
+    TR_GROUPS.forEach(function(g){
+      g.engines.forEach(function(e){
+        var n=data.filter(function(s){
+          if(e.isB737){
+            var key=e.dataKey||'b737';
+            return s[key]&&s[key][e.eng]&&s[key][e.eng].length>0;
+          }
+          return s.typeMatrix&&s.typeMatrix[e.id]&&s.typeMatrix[e.id].length>0;
+        }).length;
+        groups.push({label:e.label,count:n,bg:g.bg});
+      });
+    });
+    bar.innerHTML='';
+    groups.forEach(function(item,i){
+      if(i>0){ var sep=document.createElement('div'); sep.style.cssText='width:1px;background:#f0f2f8;margin:2px 0;flex-shrink:0'; bar.appendChild(sep); }
+      var cell=document.createElement('div'); cell.style.cssText='display:flex;flex-direction:column;align-items:center;padding:4px 14px;min-width:60px;flex-shrink:0';
+      var num=document.createElement('div'); num.style.cssText='font-size:15px;font-weight:800;color:'+(item.count>0?'#1f2937':'#d1d5db')+';line-height:1.2'; num.textContent=item.count;
+      var lbl=document.createElement('div'); lbl.style.cssText='font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;text-align:center;white-space:nowrap'; lbl.textContent=item.label;
+      var bar2=document.createElement('div'); bar2.style.cssText='height:3px;border-radius:2px;width:100%;margin-top:4px;background:'+(item.count>0?item.bg:'#f3f4f6'); bar2.style.opacity=item.count>0?'0.7':'1';
+      cell.appendChild(num); cell.appendChild(lbl); cell.appendChild(bar2); bar.appendChild(cell);
+    });
+
+  } else if(ACTIVE_TAB==='authority'){
+    bar.style.display='flex';
+    bar.style.cssText='display:flex;background:#fff;border-radius:12px;border:1px solid #f0f2f8;padding:8px 16px;margin-bottom:10px;overflow-x:auto;gap:0;flex-wrap:nowrap;align-items:stretch';
+    var groups=[];
+    AUTH_GROUPS.forEach(function(g){
+      g.cols.forEach(function(c){
+        var n=data.filter(function(s){
+          return s.authApprovals&&s.authApprovals[c.id]&&s.authApprovals[c.id].length>0;
+        }).length;
+        groups.push({label:c.label,count:n,bg:g.bg});
+      });
+    });
+    bar.innerHTML='';
+    groups.forEach(function(item,i){
+      if(i>0){ var sep=document.createElement('div'); sep.style.cssText='width:1px;background:#f0f2f8;margin:2px 0;flex-shrink:0'; bar.appendChild(sep); }
+      var cell=document.createElement('div'); cell.style.cssText='display:flex;flex-direction:column;align-items:center;padding:4px 14px;min-width:60px;flex-shrink:0';
+      var num=document.createElement('div'); num.style.cssText='font-size:15px;font-weight:800;color:'+(item.count>0?'#1f2937':'#d1d5db')+';line-height:1.2'; num.textContent=item.count;
+      var lbl=document.createElement('div'); lbl.style.cssText='font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;text-align:center;white-space:nowrap'; lbl.textContent=item.label;
+      var bar2=document.createElement('div'); bar2.style.cssText='height:3px;border-radius:2px;width:100%;margin-top:4px;background:'+(item.count>0?item.bg:'#f3f4f6'); bar2.style.opacity=item.count>0?'0.7':'1';
+      cell.appendChild(num); cell.appendChild(lbl); cell.appendChild(bar2); bar.appendChild(cell);
+    });
+
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function renderTable(data){
+  var colDefs=getColDefs();
+  var body=document.getElementById('tBody');
+  if(!data.length){
+    var tr=document.createElement('tr'); var td=document.createElement('td');
+    td.setAttribute('colspan',String(6+colDefs.length)); td.className='no-data'; td.textContent='No records match the filter.';
+    tr.appendChild(td); body.innerHTML=''; body.appendChild(tr); return;
+  }
+  var frag=document.createDocumentFragment();
+
+  data.forEach(function(s){
+    var tr=document.createElement('tr');
+
+    // Name — sticky left
+    var nm=document.createElement('td');
+    nm.className='sc-name';
+    nm.style.cssText='position:sticky;left:'+STICKY_LEFT.name+'px;z-index:10;background:#fff;'
+      +'width:'+nameW()+'px;min-width:'+nameW()+'px;max-width:'+nameW()+'px;'
+      +'font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    nm.textContent=s.name; nm.title=s.name; tr.appendChild(nm);
+
+    // Staff No
+    var sn=document.createElement('td');
+    sn.style.cssText='background:#fff;text-align:center;font-size:10px;color:#8a92a6;'
+      +'width:'+COL_W.staffNo+'px;min-width:'+COL_W.staffNo+'px;max-width:'+COL_W.staffNo+'px';
+    sn.textContent=s.staffNo; tr.appendChild(sn);
+
+    // Appr No
+    var an=document.createElement('td');
+    an.style.cssText='background:#fff;text-align:center;font-size:10px;color:#8a92a6;'
+      +'width:'+COL_W.apprNo+'px;min-width:'+COL_W.apprNo+'px;max-width:'+COL_W.apprNo+'px';
+    an.textContent=s.approNo; tr.appendChild(an);
+
+    // Section
+    var sc=document.createElement('td');
+    sc.style.cssText='background:#fff;text-align:center;'
+      +'width:'+COL_W.sec+'px;min-width:'+COL_W.sec+'px;max-width:'+COL_W.sec+'px';
+    var sp=document.createElement('span'); sp.className=s.section==='NB'?'sec-nb':'sec-wb'; sp.textContent=s.section;
+    sc.appendChild(sp); tr.appendChild(sc);
+
+    // Position
+    var po=document.createElement('td');
+    po.style.cssText='font-size:10px;color:#374151;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+      +'width:'+COL_W.pos+'px;min-width:'+COL_W.pos+'px;max-width:'+COL_W.pos+'px';
+    po.textContent=s.position; tr.appendChild(po);
+
+    // Category codes
+    var ca=document.createElement('td');
+    ca.style.cssText='text-align:center;padding:4px 2px;'
+      +'width:'+COL_W.cat+'px;min-width:'+COL_W.cat+'px;max-width:'+COL_W.cat+'px';
+    s.cats.forEach(function(c){
+      c=c.trim();
+      var label,color,bg;
+      if(c==='A'||c==='B'){label=c;color='#4f46e5';bg='#eef2ff';}
+      else if(c==='C'){label=c;color='#7c3aed';bg='#f5f3ff';}
+      else if(c==='G'||c==='K'){label=c;color='#0891b2';bg='#e0f2fe';}
+      else if(c==='M'){label=c;color='#b45309';bg='#fffbeb';}
+      else{label=c;color='#6b7280';bg='#f3f4f6';}
+      var badge=document.createElement('span');
+      badge.style.cssText='display:block;margin:1px 0;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:800;color:'+color+';background:'+bg;
+      badge.textContent=label; ca.appendChild(badge);
+    });
+    tr.appendChild(ca);
+
+    // ── Data cells ────────────────────────────────────────────────────────
+    colDefs.forEach(function(col){
+      var td=document.createElement('td');
+      var dw=COL_W.data+'px';
+
+      if(ACTIVE_TAB==='typeRating'){
+        td.style.cssText='text-align:center;padding:4px 2px;vertical-align:middle;width:'+dw+';min-width:'+dw+';max-width:'+dw;
+      if(col.isB737){
+        var key=col.dataKey||'b737';
+        var codes=s[key]?(s[key][col.eng]||[]):[];
+          if(codes.length>0){
+            codes.forEach(function(lic){
+              var b=document.createElement('span');
+              b.style.cssText='display:inline-flex;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:700;margin:1px;background:'
+                +(lic==='B1'?'#eef2ff':lic==='B2'?'#f5f3ff':'#ecfdf5')
+                +';color:'+(lic==='B1'?'#4f46e5':lic==='B2'?'#7c3aed':'#059669');
+              b.textContent=lic; td.appendChild(b);
+            });
+          } else { var dot=document.createElement('div'); dot.className='dot-n'; td.appendChild(dot); }
+        } else {
+          var letters=(s.typeMatrix&&s.typeMatrix[col.id])?s.typeMatrix[col.id]:[];
+          if(letters.length>0){
+            letters.forEach(function(ltr){
+              if(ltr==='T') return;
+              var b=document.createElement('span');
+              var bgc=CODE_COLORS[ltr]||'#9ca3af';
+              b.style.cssText='display:inline-flex;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:800;margin:1px;color:#fff;background:'+bgc;
+              b.textContent=ltr; td.appendChild(b);
+            });
+          } else { var dot=document.createElement('div'); dot.className='dot-n'; td.appendChild(dot); }
+        }
+
+      } else if(ACTIVE_TAB==='approval'){
+        td.className='dot-cell';
+        td.style.cssText='text-align:center;width:'+dw+';min-width:'+dw+';max-width:'+dw+';padding:2px';
+        var has=!!s.canonicals[col.id];
+        var dot=document.createElement('div'); dot.className=has?'dot-y':'dot-n';
+        if(has) dot.style.background='#6366f1';
+        td.appendChild(dot);
+
+      } else {
+        // Authority tab — CHANGE 3: apply shortenEngineType() on cell text
+        var authApprovals=s.authApprovals&&s.authApprovals[col.id];
+        if(authApprovals&&authApprovals.length>0){
+          td.style.cssText='vertical-align:top;text-align:center;padding:4px 6px;min-width:100px;width:100px;max-width:140px;background:#fff;border-right:1px solid #f0f2f8';
+          authApprovals.forEach(function(appr){
+            var dv=document.createElement('div');
+            dv.style.cssText='font-size:9px;color:#1f2937;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+            var short=shortenEngineType(appr);
+            dv.textContent=short; dv.title=appr; // full text on hover
+            td.appendChild(dv);
+          });
+        } else {
+          td.style.cssText='text-align:center;min-width:100px;width:100px;max-width:140px;padding:0;vertical-align:middle';
+          var dot=document.createElement('div'); dot.className='dot-n'; dot.style.margin='auto'; td.appendChild(dot);
+        }
+      }
+      tr.appendChild(td);
+    });
+    frag.appendChild(tr);
+  });
+  body.innerHTML=''; body.appendChild(frag);
+}
+
+function clearAll(){
+  F.desig.clear(); F.section.clear(); F.auth.clear(); F.cat.clear();
+  document.getElementById('searchBox').value='';
+  document.querySelectorAll('.fpill.active').forEach(function(el){
+    el.classList.remove('active'); el.querySelector('input').checked=false;
+  });
+  applyFilters();
+}
+</script>
+</body>
+</html>
