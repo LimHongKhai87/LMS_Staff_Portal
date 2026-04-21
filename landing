@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background-color: #f5f5f5; color: #333; line-height: 1.5; font-size: 14px;
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    /* ── Loading Screen ── */
+    .loading-screen {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; background: #fff;
+      position: fixed; inset: 0; z-index: 200;
+    }
+    .loading-screen.hide { display: none; }
+    .spinner {
+      border: 4px solid #e5e7eb; border-top: 4px solid #6b7280;
+      border-radius: 50%; width: 50px; height: 50px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-screen p { margin-top: 16px; color: #6b7280; font-weight: 500; }
+
+    /* ── Error Screen ── */
+    .message-screen {
+      display: none; text-align: center; padding: 60px 20px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin: 40px auto; max-width: 500px;
+    }
+    .message-screen.show { display: block; }
+    .message-icon {
+      width: 70px; height: 70px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 32px;
+    }
+    .message-icon.error { background: #fee2e2; color: #dc2626; }
+    .message-screen h2 { color: #1f2937; margin-bottom: 12px; font-size: 20px; }
+    .message-screen p  { color: #6b7280; margin-bottom: 24px; font-size: 14px; }
+    .message-screen .email-badge {
+      display: inline-block; background: #f3f4f6;
+      padding: 8px 16px; border-radius: 20px;
+      font-size: 13px; color: #4b5563; margin-bottom: 24px;
+    }
+
+    /* ── Saving Overlay ── */
+    .saving-overlay {
+      display: none; position: fixed; inset: 0;
+      background: #fff; z-index: 500;
+      justify-content: center; align-items: center; flex-direction: column;
+    }
+    .saving-overlay.show { display: flex; }
+    .saving-overlay p { margin-top: 16px; color: #6b7280; font-weight: 500; text-align: center; }
+
+    /* ── Redirect Prompt Overlay ── */
+    .redirect-overlay {
+      display: none; position: fixed; inset: 0;
+      background: #fff; z-index: 500;
+      justify-content: center; align-items: center; flex-direction: column;
+      padding: 24px;
+    }
+    .redirect-overlay.show { display: flex; }
+    .redirect-overlay p {
+      color: #6b7280; font-size: 15px; margin-bottom: 24px; text-align: center;
+    }
+    .redirect-btn {
+      display: inline-block; padding: 14px 36px;
+      background: #1f2937; color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s;
+    }
+    .redirect-btn:hover { background: #374151; }
+
+    /* ── Portal Layout ── */
+    .portal-layout {
+      display: none;
+      min-height: 100vh;
+      padding: 24px 16px;
+      align-items: center;
+      justify-content: center;
+    }
+    .portal-layout.show { display: flex; }
+
+    /* ── Card ── */
+    .portal-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      width: 100%; max-width: 640px;
+      overflow: hidden;
+    }
+
+    /* ── Card Header ── */
+    .card-header { padding: 28px 32px; }
+    .org-label {
+      font-size: 11px; font-weight: 600; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+    .portal-title    { font-size: 24px; font-weight: 600; color: #1f2937; margin-bottom: 2px; }
+    .portal-subtitle { font-size: 14px; color: #6b7280; }
+
+    /* ── Nav Buttons ── */
+    .card-body { padding: 28px 32px; }
+    .nav-section-label {
+      font-size: 12px; font-weight: 600; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+    }
+
+    .nav-btn {
+      display: flex; align-items: center; width: 100%;
+      padding: 20px 22px; margin-bottom: 14px;
+      background: #fff; border: 1.5px solid #e5e7eb;
+      border-radius: 10px; cursor: pointer;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      gap: 18px;
+    }
+    .nav-btn:last-child { margin-bottom: 0; }
+    .nav-btn:hover {
+      background: #fff;
+      border-color: #6b7280;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    }
+
+    .nav-btn-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-btn-icon svg {
+      width: 28px; height: 28px; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .nav-btn-icon.green  svg { stroke: #16a34a; }
+    .nav-btn-icon.blue   svg { stroke: #1a73e8; }
+    .nav-btn-icon.orange svg { stroke: #ea580c; }
+
+    .nav-btn-text { flex: 1; text-align: left; }
+    .nav-btn-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+    .nav-btn-desc  { font-size: 13px; color: #9ca3af; margin-top: 2px; }
+
+    .nav-btn-arrow {
+      font-size: 20px; color: #9ca3af; flex-shrink: 0;
+      display: inline-block;
+      transition: transform 0.2s ease, color 0.15s ease;
+    }
+    .nav-btn:hover .nav-btn-arrow { transform: translateX(5px); color: #374151; }
+
+    /* ── Footer ── */
+    .card-footer { padding: 14px 32px; }
+    .footer-copy { font-size: 11px; color: #9ca3af; }
+
+    .hidden { display: none !important; }
+
+    /* ── Mobile ── */
+    @media (max-width: 680px) {
+      body { background-color: #fff; }
+      .portal-layout { padding: 0; align-items: center; justify-content: center; min-height: 100vh; }
+      .portal-card { border-radius: 12px; max-width: calc(100% - 32px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+      .card-header { padding: 22px 20px; }
+      .card-body   { padding: 20px 20px; }
+      .card-footer { padding: 12px 20px; }
+      .portal-title { font-size: 20px; }
+      .nav-btn { padding: 18px 16px; gap: 14px; }
+      .nav-btn-title { font-size: 15px; }
+      .nav-btn-icon svg { width: 24px; height: 24px; }
+    }
+    @media (max-width: 380px) {
+      .portal-card { max-width: calc(100% - 24px); }
+      .nav-btn-title { font-size: 14px; }
+      .nav-btn-desc  { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <p>Checking your access...</p>
+  </div>
+
+  <!-- Error Screen -->
+  <div class="message-screen" id="errorScreen">
+    <div class="message-icon error">!</div>
+    <h2 id="errorTitle">Access Restricted</h2>
+    <div class="email-badge" id="errorEmail"></div>
+    <p id="errorMsg">Please use your company email address (@airasia.com) to access this portal.</p>
+  </div>
+
+  <!-- Portal Landing -->
+  <div class="portal-layout" id="portalLayout">
+    <div class="portal-card">
+
+      <div class="card-header">
+        <div class="org-label">Part 145 KUL Line</div>
+        <div class="portal-title">Staff Portal</div>
+      </div>
+
+      <div class="card-body">
+        <div class="nav-section-label">Navigate to</div>
+
+        <!-- Dashboard — role users only -->
+        <a href="#" class="nav-btn hidden" id="btnDashboard" onclick="navigateTo('dashboard'); return false;">
+          <div class="nav-btn-icon green">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          <div class="nav-btn-text">
+            <div class="nav-btn-title">Staff Dashboard</div>
+            <div class="nav-btn-desc">View and manage staff records, documents, absence &amp; disciplinary logs</div>
+          </div>
+          <div class="nav-btn-arrow">→</div>
+        </a>
+
+        <!-- Approval Matrix — role users only -->
+        <a href="#" class="nav-btn hidden" id="btnApproval" onclick="navigateTo('approval'); return false;">
+          <div class="nav-btn-icon orange">
+            <svg viewBox="0 0 24 24">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6"  y1="20" x2="6"  y2="14"/>
+              <polyline points="2 20 22 20"/>
+            </svg>
+          </div>
+          <div class="nav-btn-text">
+            <div class="nav-btn-title">Approval Matrix</div>
+            <div class="nav-btn-desc">Certifying staff approval categories, type ratings &amp; foreign authority coverage</div>
+          </div>
+          <div class="nav-btn-arrow">→</div>
+        </a>
+
+        <!-- My Profile — all registered users -->
+        <a href="#" class="nav-btn" id="btnProfile" onclick="navigateTo('profile'); return false;">
+          <div class="nav-btn-icon blue">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="nav-btn-text">
+            <div class="nav-btn-title">My Profile</div>
+            <div class="nav-btn-desc">View and update your personal details, licenses, approvals &amp; documents</div>
+          </div>
+          <div class="nav-btn-arrow">→</div>
+        </a>
+
+      </div>
+
+      <div class="card-footer">
+        <span class="footer-copy">Asia Digital Engineering Sdn Bhd &copy; 2025</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Saving Overlay -->
+  <div class="saving-overlay" id="savingOverlay">
+    <div class="spinner"></div>
+    <p id="savingMessage">Loading...</p>
+  </div>
+
+  <!-- Redirect Prompt Overlay -->
+  <div class="redirect-overlay" id="redirectOverlay">
+    <p id="redirectMessage">Your session is ready.</p>
+    <a id="redirectBtn" href="#" target="_top" class="redirect-btn">Continue →</a>
+  </div>
+
+  <script>
+    var scriptUrl = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      google.script.run
+        .withSuccessHandler(function(url) {
+          scriptUrl = url;
+          checkAccess();
+        })
+        .withFailureHandler(function() {
+          scriptUrl = window.location.href.split('?')[0];
+          checkAccess();
+        })
+        .getScriptUrl();
+    });
+
+    function checkAccess() {
+      google.script.run
+        .withSuccessHandler(handleAccess)
+        .withFailureHandler(function(err) {
+          document.getElementById('loadingScreen').classList.add('hide');
+          showError('Error', '', 'An error occurred while checking your access. Please refresh.');
+        })
+        .checkUserAccess();
+    }
+
+    function handleAccess(result) {
+      document.getElementById('loadingScreen').classList.add('hide');
+
+      if (result.status === 'invalid_domain' || result.status === 'error') {
+        showError(
+          'Access Restricted',
+          result.email || '',
+          result.status === 'invalid_domain'
+            ? 'Please use your company email address (@airasia.com) to access this portal.'
+            : (result.message || 'An unexpected error occurred.')
+        );
+        return;
+      }
+
+      if (result.status === 'not_registered') {
+        showRedirectPrompt(scriptUrl + '?page=register', 'Tap below to complete your registration.');
+        return;
+      }
+
+      if (result.status === 'registered') {
+        showRedirectPrompt(scriptUrl + '?page=profile', 'Tap below to open your profile.');
+        return;
+      }
+
+      if (result.status === 'role_access') {
+        document.getElementById('btnDashboard').classList.remove('hidden');
+        document.getElementById('btnApproval').classList.remove('hidden');
+        document.getElementById('portalLayout').classList.add('show');
+      }
+    }
+
+    function navigateTo(page) {
+      var messages = {
+        dashboard: 'Loading staff dashboard...',
+        analytics:  'Loading analytics...',
+        approval:   'Loading approval matrix...',
+        profile:    'Loading your profile...'
+      };
+      document.getElementById('savingMessage').textContent = messages[page] || 'Loading...';
+      document.getElementById('savingOverlay').classList.add('show');
+      topNavigate(scriptUrl + '?page=' + page);
+    }
+
+    function topNavigate(url) {
+      var a = document.createElement('a');
+      a.href = url; a.target = '_top';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function showRedirectPrompt(url, message) {
+      document.getElementById('redirectMessage').textContent = message;
+      document.getElementById('redirectBtn').href = url;
+      document.getElementById('redirectOverlay').classList.add('show');
+    }
+
+    function showError(title, email, msg) {
+      document.getElementById('errorTitle').textContent = title;
+      document.getElementById('errorEmail').textContent = email;
+      document.getElementById('errorMsg').textContent = msg;
+      document.getElementById('errorScreen').classList.add('show');
+    }
+  </script>
+
+</body>
+</html>
