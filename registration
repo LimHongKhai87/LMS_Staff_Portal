@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      font-size: inherit;
+      line-height: inherit;
+      color: inherit;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background-color: #ffffff;
+      color: #333;
+      line-height: 1.5;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 15px;
+      padding-bottom: 100px;
+    }
+    
+    .form-header {
+      text-align: center;
+      padding: 20px 10px;
+      margin-bottom: 10px;
+    }
+    
+    .form-header h1 {
+      color: #4b5563;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .form-header p {
+      color: #6b7280;
+      font-size: 13px;
+    }
+    
+    .progress-container {
+      padding: 15px 10px 25px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .progress-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-width: 500px;
+      position: relative;
+    }
+    
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+    
+    .progress-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      border: 3px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      transition: all 0.3s ease;
+    }
+    
+    .progress-step.active .progress-dot {
+      background: #4b5563;
+      border-color: #4b5563;
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(75, 85, 99, 0.2);
+    }
+    
+    .progress-step.completed .progress-dot {
+      background: #4b5563;
+      border-color: #4b5563;
+      color: #fff;
+    }
+    
+    .progress-step.completed .progress-dot::after {
+      content: '✓';
+      font-size: 14px;
+    }
+    
+    .progress-step.completed .step-number {
+      display: none;
+    }
+    
+    .progress-label {
+      margin-top: 8px;
+      font-size: 10px;
+      color: #9ca3af;
+      text-align: center;
+      max-width: 60px;
+      line-height: 1.2;
+      font-weight: 500;
+    }
+    
+    .progress-step.active .progress-label,
+    .progress-step.completed .progress-label {
+      color: #4b5563;
+    }
+    
+    .progress-line {
+      flex: 1;
+      height: 3px;
+      background: #e5e7eb;
+      margin: 0 -5px;
+      position: relative;
+      top: -12px;
+      z-index: 1;
+    }
+    
+    .progress-line.completed {
+      background: #4b5563;
+    }
+    
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .section.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .section-title {
+      color: #4b5563;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .form-group {
+      margin-bottom: 18px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #374151;
+      font-size: 14px;
+    }
+    
+    label .required {
+      color: #dc2626;
+      margin-left: 2px;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    input[type="number"],
+    input[type="url"],
+    input[type="tel"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 14px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #4b5563;
+      box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.15);
+    }
+    
+    input:disabled,
+    select:disabled {
+      background-color: #f3f4f6;
+      color: #6b7280;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    .phone-group-simple {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .phone-prefix-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      flex-shrink: 0;
+    }
+    
+    .phone-input {
+      flex: 1;
+    }
+    
+    .email-display {
+      font-size: 16px;
+      color: #374151;
+    }
+    
+    .ic-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .ic-part1 { flex: 6; min-width: 0; text-align: center; }
+    .ic-part2 { flex: 2; min-width: 0; text-align: center; }
+    .ic-part3 { flex: 4; min-width: 0; text-align: center; }
+    
+    .ic-separator {
+      font-size: 18px;
+      font-weight: 600;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+    
+    .file-input {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px dashed #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .file-input::file-selector-button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #4b5563;
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      margin-right: 12px;
+    }
+    
+    /* ── File preview: image card (keep aspect ratio for photos) ── */
+    .image-preview {
+      margin-top: 10px;
+      width: 100%;
+      background: #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-preview.photo-preview {
+      aspect-ratio: 85.60 / 53.98;
+    }
+
+    .image-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ── PDF filename display ── */
+    .pdf-preview {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #f3f4f6;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+    }
+
+    .pdf-preview svg {
+      flex-shrink: 0;
+    }
+
+    .pdf-preview-name {
+      font-size: 13px;
+      color: #374151;
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .pdf-preview-size {
+      font-size: 11px;
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+    
+    .employment-section {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .employment-section h4 {
+      color: #4b5563;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #d1d5db;
+    }
+    
+    .circle-btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      width: 100%;
+    }
+    
+    .circle-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 22px;
+      border: 2px solid #4b5563;
+      background: #fff;
+      color: #4b5563;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .circle-btn.active {
+      background: #4b5563;
+      color: #fff;
+    }
+    
+    .circle-btn:hover {
+      background: #f3f4f6;
+    }
+    
+    .circle-btn.active:hover {
+      background: #374151;
+    }
+    
+    .multi-select-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .multi-select-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .badge-count {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4b5563;
+      background: #e5e7eb;
+      padding: 2px 10px;
+      border-radius: 10px;
+    }
+    
+    .selected-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #374151;
+      color: #fff;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .badge-remove {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+      opacity: 0.8;
+    }
+    
+    .badge-remove:hover {
+      opacity: 1;
+    }
+    
+    .ms-dropdown {
+      position: relative;
+    }
+    
+    .ms-trigger {
+      width: 100%;
+      padding: 14px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #6b7280;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      user-select: none;
+    }
+    
+    .ms-trigger:hover {
+      border-color: #9ca3af;
+    }
+    
+    .ms-trigger.open {
+      border-color: #4b5563;
+      box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.15);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .ms-arrow {
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+    
+    .ms-trigger.open .ms-arrow {
+      transform: rotate(180deg);
+    }
+    
+    .ms-panel {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1.5px solid #4b5563;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .ms-panel.open {
+      display: block;
+    }
+    
+    .ms-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 15px;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .ms-option:last-child {
+      border-bottom: none;
+    }
+    
+    .ms-option:hover {
+      background: #f3f4f6;
+    }
+    
+    .ms-option.selected {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+    
+    .ms-option.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      background: #f9fafb;
+    }
+    
+    .ms-option input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #4b5563;
+      flex-shrink: 0;
+    }
+    
+    .ms-option label {
+      margin-bottom: 0;
+      cursor: pointer;
+      font-weight: 400;
+      flex: 1;
+    }
+
+    .ms-done-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #f3f4f6;
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      color: #4b5563;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      position: sticky;
+      bottom: 0;
+    }
+    
+    .ms-done-btn:hover {
+      background: #e5e7eb;
+    }
+    
+    .month-year-picker {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .month-select { flex: 1.5; }
+    .year-select { flex: 1; }
+    
+    .readonly-input {
+      background: #f3f4f6;
+      cursor: not-allowed;
+      color: #374151;
+    }
+    
+    .subsection-container {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .subsection-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .nav-buttons {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 15px 20px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 12px;
+      z-index: 100;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 16px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: #1a73e8;
+      color: #fff;
+    }
+    
+    .btn-primary:hover,
+    .btn-primary:active {
+      background: #1557b0;
+    }
+    
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: 1.5px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover,
+    .btn-secondary:active {
+      background: #e5e7eb;
+    }
+    
+    .btn-success {
+      background: #059669;
+      color: #fff;
+    }
+    
+    .btn-success:hover,
+    .btn-success:active {
+      background: #047857;
+    }
+    
+    .alert {
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 14px;
+    }
+    
+    .alert-success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .loading-overlay.show {
+      display: flex;
+    }
+    
+    .spinner {
+      border: 4px solid #e5e7eb;
+      border-top: 4px solid #4b5563;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    .loading-overlay p {
+      margin-top: 15px;
+      color: #4b5563;
+      font-weight: 500;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .success-screen.show {
+      display: block;
+    }
+    
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: #d1fae5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 40px;
+    }
+    
+    .success-screen h2 {
+      color: #065f46;
+      margin-bottom: 10px;
+    }
+    
+    .success-screen p {
+      color: #6b7280;
+    }
+    
+    .help-text {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .confirmation-dialog-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .confirmation-dialog {
+      background: white;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .confirmation-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .confirmation-header h2 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .confirmation-header p {
+      margin: 0;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .confirmation-body {
+      padding: 16px 24px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .confirm-section {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .confirm-section:last-child {
+      border-bottom: none;
+    }
+
+    .confirm-section h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      padding: 8px 12px;
+      background: #f9fafb;
+      border-radius: 6px;
+    }
+
+    .confirm-row {
+      display: flex;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+
+    .confirm-row label {
+      width: 180px;
+      flex-shrink: 0;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .confirm-row span {
+      flex: 1;
+      color: #1f2937;
+    }
+
+    .confirm-employment {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .confirm-employment strong {
+      color: #374151;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .confirmation-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-confirm-cancel {
+      background: #6b7280;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-confirm-cancel:hover {
+      background: #4b5563;
+    }
+
+    @media (max-width: 768px) {
+      .confirmation-dialog { margin: 10px; }
+      .confirm-row { flex-direction: column; }
+      .confirm-row label { width: 100%; margin-bottom: 4px; font-size: 12px; }
+      .confirmation-footer { flex-direction: column; }
+      .confirmation-footer button { width: 100%; }
+    }
+    
+    @media (max-width: 400px) {
+      .form-row { flex-direction: column; gap: 0; }
+      .progress-wrapper { min-width: 450px; }
+    }
+    
+    @media (min-width: 500px) {
+      .progress-wrapper { min-width: auto; }
+      .progress-container { overflow-x: visible; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-header">
+      <h1>Staff Registration</h1>
+      <p>ADE Sdn Bhd - Part 145 KUL Line Maintenance</p>
+    </div>
+    
+    <div class="progress-container">
+      <div class="progress-wrapper">
+        <div class="progress-step active" data-step="1">
+          <div class="progress-dot"><span class="step-number">1</span></div>
+          <span class="progress-label">Department</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="2">
+          <div class="progress-dot"><span class="step-number">2</span></div>
+          <span class="progress-label">Employment</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="3">
+          <div class="progress-dot"><span class="step-number">3</span></div>
+          <span class="progress-label">CAAM License</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step" data-step="4">
+          <div class="progress-dot"><span class="step-number">4</span></div>
+          <span class="progress-label">Personal</span>
+        </div>
+      </div>
+    </div>
+    
+    <div id="alertBox" class="alert"></div>
+    
+    <form id="registrationForm">
+      <!-- Section 1: Department Information -->
+      <div class="section active" data-section="1">
+        <h3 class="section-title">Department Information</h3>
+        
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="email-display" id="email_display"></div>
+          <input type="hidden" id="email_address" name="email_address">
+        </div>
+        
+        <div class="form-group">
+          <label>Full Name <span class="required">*</span></label>
+          <input type="text" id="full_name" name="full_name" required placeholder="Enter your full name">
+          <p class="help-text">Name will be formatted automatically</p>
+        </div>
+        
+        <div class="form-group">
+          <label>Staff No <span class="required">*</span></label>
+          <input type="text" id="staff_no" name="staff_no" required maxlength="7" pattern="\d{7}" placeholder="Enter 7 digit staff number" inputmode="numeric">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Joining Date <span class="required">*</span></label>
+            <input type="date" id="joining_date" name="joining_date" required>
+          </div>
+          <div class="form-group">
+            <label>Date of Birth <span class="required">*</span></label>
+            <input type="date" id="date_of_birth" name="date_of_birth" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="age" name="age" disabled placeholder="Auto calculated">
+        </div>
+        
+        <div class="form-group">
+          <label>Nationality <span class="required">*</span></label>
+          <select id="nationality" name="nationality" required>
+            <option value="" disabled selected>Select Nationality</option>
+          </select>
+        </div>
+        
+        <div id="ic_section" class="hidden">
+          <div class="form-group">
+            <label>IC No <span class="required">*</span></label>
+            <div class="ic-group">
+              <input type="text" id="ic_part1" class="ic-part1" maxlength="6" placeholder="YYMMDD" inputmode="numeric">
+              <span class="ic-separator">-</span>
+              <input type="text" id="ic_part2" class="ic-part2" maxlength="2" placeholder="PB" inputmode="numeric">
+              <span class="ic-separator">-</span>
+              <input type="text" id="ic_part3" class="ic-part3" maxlength="4" placeholder="XXXX" inputmode="numeric">
+            </div>
+            <input type="hidden" id="ic_no" name="ic_no">
+          </div>
+          
+          <div class="form-group">
+            <label>Upload IC <span class="required">*</span></label>
+            <p class="help-text">Photo, scan or PDF accepted (max 5MB)</p>
+            <input type="file" id="ic_picture" name="ic_picture" accept="image/*,.pdf,.heic,.heif" class="file-input">
+            <div id="ic_preview"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Gender <span class="required">*</span></label>
+          <select id="gender" name="gender" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Phone No <span class="required">*</span></label>
+          <div class="phone-group-simple">
+            <span class="phone-prefix-text">+60</span>
+            <input type="text" id="phone_number" class="phone-input" maxlength="10" placeholder="123456789" required inputmode="numeric">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Designation <span class="required">*</span></label>
+          <select id="designation" name="designation" required>
+            <option value="" disabled selected>Select Designation</option>
+            <option value="LAE - B1">LAE - B1</option>
+            <option value="LAE - B2">LAE - B2</option>
+            <option value="Technician - Cat A">Technician - Cat A</option>
+            <option value="Technician">Technician</option>
+          </select>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Main Trade <span class="required">*</span></label>
+            <select id="main_trade" name="main_trade" required>
+              <option value="" disabled selected>Select Trade</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year Joined Aviation <span class="required">*</span></label>
+            <select id="year_aviation" name="year_aviation" required>
+              <option value="" disabled selected>Select Year</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Total Years in Aviation</label>
+          <input type="number" id="total_years_aviation" name="total_years_aviation" disabled placeholder="Auto calculated">
+          <p class="help-text">Calculated from year joined aviation to today</p>
+        </div>
+        
+        <div class="form-group">
+          <label>Nickname (Also Known As)</label>
+          <input type="text" id="nickname" name="nickname" placeholder="Your nickname">
+        </div>
+      </div>
+      
+      <!-- Section 2: Previous Employment -->
+      <div class="section" data-section="2">
+        <h3 class="section-title">Previous Employment</h3>
+        
+        <div class="form-group">
+          <label>No. of Previous Employment</label>
+          <div class="circle-btn-group">
+            <button type="button" class="circle-btn active" data-value="0">0</button>
+            <button type="button" class="circle-btn" data-value="1">1</button>
+            <button type="button" class="circle-btn" data-value="2">2</button>
+            <button type="button" class="circle-btn" data-value="3">3</button>
+          </div>
+          <input type="hidden" id="no_of_employment" name="no_of_employment" value="0">
+        </div>
+        
+        <!-- 1st Employment -->
+        <div id="employment_1" class="employment-section hidden">
+          <h4>1st - Most Recent</h4>
+          <div class="form-group">
+            <label>Company Name <span class="required emp-req-1">*</span></label>
+            <input type="text" id="company_last" name="company_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Section <span class="required emp-req-1">*</span></label>
+              <span class="badge-count" id="count_section_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_section_last"></div>
+              <div class="ms-dropdown" id="ms_section_last"></div>
+            </div>
+            <input type="hidden" id="section_last_values" name="section_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Designation <span class="required emp-req-1">*</span></label>
+              <span class="badge-count" id="count_designation_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_designation_last"></div>
+              <div class="ms-dropdown" id="ms_designation_last"></div>
+            </div>
+            <input type="hidden" id="designation_last_values" name="designation_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Aircraft Type Worked On <span class="required emp-req-1">*</span></label>
+              <span class="badge-count" id="count_type_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_type_last"></div>
+              <div class="ms-dropdown" id="ms_type_last"></div>
+            </div>
+            <input type="hidden" id="type_last_values" name="type_last">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Date <span class="required emp-req-1">*</span></label>
+              <input type="date" id="start_date_last" name="start_date_last">
+            </div>
+            <div class="form-group">
+              <label>End Date <span class="required emp-req-1">*</span></label>
+              <input type="date" id="end_date_last" name="end_date_last">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Years</label>
+            <input type="number" id="year_last" name="year_last" disabled placeholder="Auto calculated">
+          </div>
+        </div>
+        
+        <!-- 2nd Employment -->
+        <div id="employment_2" class="employment-section hidden">
+          <h4>2nd Employment</h4>
+          <div class="form-group">
+            <label>Company Name <span class="required emp-req-2">*</span></label>
+            <input type="text" id="company_second_last" name="company_second_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Section <span class="required emp-req-2">*</span></label>
+              <span class="badge-count" id="count_section_second_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_section_second_last"></div>
+              <div class="ms-dropdown" id="ms_section_second_last"></div>
+            </div>
+            <input type="hidden" id="section_second_last_values" name="section_second_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Designation <span class="required emp-req-2">*</span></label>
+              <span class="badge-count" id="count_designation_second_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_designation_second_last"></div>
+              <div class="ms-dropdown" id="ms_designation_second_last"></div>
+            </div>
+            <input type="hidden" id="designation_second_last_values" name="designation_second_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Aircraft Type Worked On <span class="required emp-req-2">*</span></label>
+              <span class="badge-count" id="count_type_second_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_type_second_last"></div>
+              <div class="ms-dropdown" id="ms_type_second_last"></div>
+            </div>
+            <input type="hidden" id="type_second_last_values" name="type_second_last">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Date <span class="required emp-req-2">*</span></label>
+              <input type="date" id="start_date_second_last" name="start_date_second_last">
+            </div>
+            <div class="form-group">
+              <label>End Date <span class="required emp-req-2">*</span></label>
+              <input type="date" id="end_date_second_last" name="end_date_second_last">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Years</label>
+            <input type="number" id="year_second_last" name="year_second_last" disabled placeholder="Auto calculated">
+          </div>
+        </div>
+        
+        <!-- 3rd Employment -->
+        <div id="employment_3" class="employment-section hidden">
+          <h4>3rd Employment</h4>
+          <div class="form-group">
+            <label>Company Name <span class="required emp-req-3">*</span></label>
+            <input type="text" id="company_third_last" name="company_third_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Section <span class="required emp-req-3">*</span></label>
+              <span class="badge-count" id="count_section_third_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_section_third_last"></div>
+              <div class="ms-dropdown" id="ms_section_third_last"></div>
+            </div>
+            <input type="hidden" id="section_third_last_values" name="section_third_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Designation <span class="required emp-req-3">*</span></label>
+              <span class="badge-count" id="count_designation_third_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_designation_third_last"></div>
+              <div class="ms-dropdown" id="ms_designation_third_last"></div>
+            </div>
+            <input type="hidden" id="designation_third_last_values" name="designation_third_last">
+          </div>
+          <div class="form-group">
+            <div class="multi-select-header">
+              <label>Aircraft Type Worked On <span class="required emp-req-3">*</span></label>
+              <span class="badge-count" id="count_type_third_last"></span>
+            </div>
+            <div class="multi-select-container">
+              <div class="selected-badges" id="badges_type_third_last"></div>
+              <div class="ms-dropdown" id="ms_type_third_last"></div>
+            </div>
+            <input type="hidden" id="type_third_last_values" name="type_third_last">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Date <span class="required emp-req-3">*</span></label>
+              <input type="date" id="start_date_third_last" name="start_date_third_last">
+            </div>
+            <div class="form-group">
+              <label>End Date <span class="required emp-req-3">*</span></label>
+              <input type="date" id="end_date_third_last" name="end_date_third_last">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Years</label>
+            <input type="number" id="year_third_last" name="year_third_last" disabled placeholder="Auto calculated">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Section 3: CAAM License -->
+      <div class="section" data-section="3">
+        <h3 class="section-title">CAAM License</h3>
+        
+        <div class="form-group">
+          <div class="multi-select-header">
+            <label>Available License <span class="required">*</span></label>
+            <span class="badge-count" id="count_available_license"></span>
+          </div>
+          <div class="multi-select-container">
+            <div class="selected-badges" id="badges_available_license"></div>
+            <div class="ms-dropdown" id="ms_available_license"></div>
+          </div>
+          <input type="hidden" id="available_license_values" name="available_license">
+        </div>
+        
+        <!-- AMEL Section -->
+        <div id="amel_section" class="hidden">
+          <div class="subsection-container">
+            <div class="subsection-title">AMEL License (B/C)</div>
+            <div class="form-group">
+              <div class="multi-select-header">
+                <label>AMEL License Category <span class="required amel-req">*</span></label>
+                <span class="badge-count" id="count_amel_category"></span>
+              </div>
+              <div class="multi-select-container">
+                <div class="selected-badges" id="badges_amel_category"></div>
+                <div class="ms-dropdown" id="ms_amel_category"></div>
+              </div>
+              <input type="hidden" id="amel_category_values" name="amel_category">
+            </div>
+            <div class="form-group">
+              <label>AMEL License No <span class="required amel-req">*</span></label>
+              <input type="text" id="amel_license" name="amel_license" placeholder="License number">
+            </div>
+            <div class="form-group">
+              <label>Upload AMEL License (PDF) <span class="required amel-req">*</span></label>
+              <p class="help-text">PDF only, max 5MB</p>
+              <input type="file" id="amel_picture" name="amel_picture" accept="application/pdf,.pdf" class="file-input">
+              <div id="amel_preview"></div>
+            </div>
+            <div id="b1_type_section" class="form-group hidden">
+              <div class="multi-select-header">
+                <label>B1 Type Rating <span class="required b1-req">*</span></label>
+                <span class="badge-count" id="count_b1_type_rating"></span>
+              </div>
+              <div class="multi-select-container">
+                <div class="selected-badges" id="badges_b1_type_rating"></div>
+                <div class="ms-dropdown" id="ms_b1_type_rating"></div>
+              </div>
+              <input type="hidden" id="b1_type_rating_values" name="b1_type_rating">
+            </div>
+            <div id="b2_type_section" class="form-group hidden">
+              <div class="multi-select-header">
+                <label>B2 Type Rating <span class="required b2-req">*</span></label>
+                <span class="badge-count" id="count_b2_type_rating"></span>
+              </div>
+              <div class="multi-select-container">
+                <div class="selected-badges" id="badges_b2_type_rating"></div>
+                <div class="ms-dropdown" id="ms_b2_type_rating"></div>
+              </div>
+              <input type="hidden" id="b2_type_rating_values" name="b2_type_rating">
+            </div>
+            <div id="c_type_section" class="form-group hidden">
+              <div class="multi-select-header">
+                <label>C Type Rating <span class="required c-req">*</span></label>
+                <span class="badge-count" id="count_c_type_rating"></span>
+              </div>
+              <div class="multi-select-container">
+                <div class="selected-badges" id="badges_c_type_rating"></div>
+                <div class="ms-dropdown" id="ms_c_type_rating"></div>
+              </div>
+              <input type="hidden" id="c_type_rating_values" name="c_type_rating">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Issue Date <span class="required amel-req">*</span></label>
+                <input type="date" id="amel_issue_date" name="amel_issue_date">
+              </div>
+              <div class="form-group">
+                <label>Expiry Date <span class="required amel-req">*</span></label>
+                <input type="date" id="amel_license_expiry" name="amel_license_expiry">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- AMTL Section -->
+        <div id="amtl_section" class="hidden">
+          <div class="subsection-container">
+            <div class="subsection-title">AMTL License (A)</div>
+            <div class="form-group">
+              <label>AMTL License Category <span class="required amtl-req">*</span></label>
+              <select id="amtl_license_category" name="amtl_license_category">
+                <option value="" disabled selected>Select Category</option>
+                <option value="A1">A1</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>AMTL License No <span class="required amtl-req">*</span></label>
+              <input type="text" id="amtl_license_no" name="amtl_license_no" placeholder="License number">
+            </div>
+            <div class="form-group">
+              <label>Upload AMTL License (PDF) <span class="required amtl-req">*</span></label>
+              <p class="help-text">PDF only, max 5MB</p>
+              <input type="file" id="amtl_picture" name="amtl_picture" accept="application/pdf,.pdf" class="file-input">
+              <div id="amtl_preview"></div>
+            </div>
+            <div id="a1_type_section" class="form-group hidden">
+              <div class="multi-select-header">
+                <label>A1 Type Rating <span class="required a1-req">*</span></label>
+                <span class="badge-count" id="count_a1_type_rating"></span>
+              </div>
+              <div class="multi-select-container">
+                <div class="selected-badges" id="badges_a1_type_rating"></div>
+                <div class="ms-dropdown" id="ms_a1_type_rating"></div>
+              </div>
+              <input type="hidden" id="a1_type_rating_values" name="a1_type_rating">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Issue Date <span class="required amtl-req">*</span></label>
+                <input type="date" id="amtl_issue_date" name="amtl_issue_date">
+              </div>
+              <div class="form-group">
+                <label>Expiry Date <span class="required amtl-req">*</span></label>
+                <input type="date" id="amtl_license_expiry" name="amtl_license_expiry">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Year Established -->
+        <div id="year_section" class="hidden">
+          <div class="form-group">
+            <label>Year Established <span class="required license-req">*</span></label>
+            <div class="month-year-picker">
+              <select id="year_establish_month" class="month-select">
+                <option value="" disabled selected>Month</option>
+                <option value="01">January</option>
+                <option value="02">February</option>
+                <option value="03">March</option>
+                <option value="04">April</option>
+                <option value="05">May</option>
+                <option value="06">June</option>
+                <option value="07">July</option>
+                <option value="08">August</option>
+                <option value="09">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select id="year_establish_year" class="year-select">
+                <option value="" disabled selected>Year</option>
+              </select>
+            </div>
+            <input type="hidden" id="year_establish" name="year_establish">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Section 4: Personal Details -->
+      <div class="section" data-section="4">
+        <h3 class="section-title">Personal Details</h3>
+        
+        <div class="form-group">
+          <label>Address <span class="required">*</span></label>
+          <textarea id="address" name="address" required placeholder="Enter your full address"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>State <span class="required">*</span></label>
+          <select id="state" name="state" required>
+            <option value="" disabled selected>Select State</option>
+            <option value="Johor">Johor</option>
+            <option value="Kedah">Kedah</option>
+            <option value="Kelantan">Kelantan</option>
+            <option value="Kuala Lumpur">Kuala Lumpur</option>
+            <option value="Labuan">Labuan</option>
+            <option value="Melaka">Melaka</option>
+            <option value="Negeri Sembilan">Negeri Sembilan</option>
+            <option value="Pahang">Pahang</option>
+            <option value="Penang">Penang</option>
+            <option value="Perak">Perak</option>
+            <option value="Perlis">Perlis</option>
+            <option value="Putrajaya">Putrajaya</option>
+            <option value="Sabah">Sabah</option>
+            <option value="Sarawak">Sarawak</option>
+            <option value="Selangor">Selangor</option>
+            <option value="Terengganu">Terengganu</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Passport</label>
+          <div class="circle-btn-group">
+            <button type="button" class="circle-btn passport-btn active" data-value="Not Available">Not Available</button>
+            <button type="button" class="circle-btn passport-btn" data-value="Available">Available</button>
+          </div>
+          <input type="hidden" id="passport_available" name="passport_available" value="Not Available">
+        </div>
+        
+        <div id="passport_details_section" class="hidden">
+          <div class="form-group">
+            <label>Passport No <span class="required passport-req">*</span></label>
+            <input type="text" id="passport_no" name="passport_no" placeholder="Passport number">
+          </div>
+          <div class="form-group">
+            <label>Passport Expiry <span class="required passport-req">*</span></label>
+            <input type="date" id="passport_expiry" name="passport_expiry">
+          </div>
+          <div class="form-group">
+            <label>Upload Passport <span class="required passport-req">*</span></label>
+            <p class="help-text">Photo, scan or PDF accepted (max 5MB)</p>
+            <input type="file" id="passport_picture" name="passport_picture" accept="image/*,.pdf,.heic,.heif" class="file-input">
+            <div id="passport_preview"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Next of Kin Name <span class="required">*</span></label>
+          <input type="text" id="next_of_kin_name" name="next_of_kin_name" required placeholder="Emergency contact name">
+        </div>
+        
+        <div class="form-group">
+          <label>Relationship <span class="required">*</span></label>
+          <select id="relationship" name="relationship" required>
+            <option value="" disabled selected>Select Relationship</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Parent">Parent</option>
+            <option value="Sibling">Sibling</option>
+            <option value="Child">Child</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Next of Kin Contact No <span class="required">*</span></label>
+          <div class="phone-group-simple">
+            <span class="phone-prefix-text">+60</span>
+            <input type="text" id="kin_phone_number" class="phone-input" maxlength="10" placeholder="123456789" required inputmode="numeric">
+          </div>
+        </div>
+      </div>
+    </form>
+    
+    <div id="successScreen" class="success-screen">
+      <div class="success-icon">✓</div>
+      <h2>Registration Complete!</h2>
+      <p>Your information has been submitted successfully.</p>
+      <button class="btn btn-primary" onclick="goToProfile()" style="margin-top: 20px; max-width: 200px; margin-left: auto; margin-right: auto;">View Profile →</button>
+    </div>
+  </div>
+  
+  <div class="nav-buttons" id="navButtons">
+    <button type="button" class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)">← Back</button>
+    <button type="button" class="btn btn-primary" id="nextBtn" onclick="navigate(1)">Next →</button>
+  </div>
+  
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p id="loadingMessage">Submitting registration...</p>
+  </div>
+  
+  <script>
+  (function() {
+    'use strict';
+    
+    var currentStep = 1;
+    var totalSteps = 4;
+
+    // ── Constants ──────────────────────────────────────────────────────────
+    var MAX_FILE_SIZE_MB = 5;
+    var MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+    
+    // ── Multi-select state ─────────────────────────────────────────────────
+    var msState = {};
+    var msOptions = {};
+    
+    var SECTION_OPTIONS = [
+      'Continuing Airworthiness','Base Maintenance','Line Maintenance','Leasing/Commercial',
+      'Materials','NDT','Production Planning','Procurement','Quality Assurance',
+      'Technical Service','Technical Records','Training','Workshop'
+    ];
+    
+    var DESIGNATION_EMP_OPTIONS = [
+      'Manager','Licensed Aircraft Engineer','QAI','Instructor','Certifying Technician',
+      'Technician','NDT Inspector','Store Inspector','Admin','TSE/Planning/Records Executive','Trainee'
+    ];
+    
+    var LICENSE_OPTIONS = ['CAAM AMEL (B/C)', 'CAAM AMTL (A)', 'None'];
+    var AMEL_CATEGORY_OPTIONS = ['B1.1', 'B1.1 Limited', 'B2', 'B2 Limited', 'Cat C'];
+    var AMEL_EXCLUSIONS = {
+      'B1.1': ['B1.1 Limited'], 'B1.1 Limited': ['B1.1'],
+      'B2': ['B2 Limited'], 'B2 Limited': ['B2']
+    };
+    
+    // ── Multi-select component ─────────────────────────────────────────────
+    function initMultiSelect(key, options, placeholder, config) {
+      config = config || {};
+      msState[key] = [];
+      msOptions[key] = options;
+      var container = document.getElementById('ms_' + key);
+      if (!container) return;
+      container.dataset.msKey = key;
+      container.dataset.placeholder = placeholder;
+      if (config.noneOption) container.dataset.noneOption = config.noneOption;
+      if (config.exclusions) container._exclusions = config.exclusions;
+      if (config.onChangeCallback) container._onChangeCallback = config.onChangeCallback;
+      renderMultiSelect(key);
+    }
+    
+    function renderMultiSelect(key) {
+      var container = document.getElementById('ms_' + key);
+      if (!container) return;
+      var placeholder = container.dataset.placeholder || '+ Add';
+      var options = msOptions[key] || [];
+      var selected = msState[key] || [];
+      var noneOption = container.dataset.noneOption || null;
+      var exclusions = container._exclusions || {};
+      var disabledSet = {};
+      selected.forEach(function(val) {
+        disabledSet[val] = true;
+        if (exclusions[val]) exclusions[val].forEach(function(ex) { disabledSet[ex] = true; });
+      });
+      if (noneOption && selected.includes(noneOption)) {
+        options.forEach(function(opt) { if (opt !== noneOption) disabledSet[opt] = true; });
+      }
+      if (noneOption && selected.length > 0 && !selected.includes(noneOption)) {
+        disabledSet[noneOption] = true;
+      }
+      var html = '<div class="ms-trigger" onclick="toggleMsPanel(\'' + key + '\')">';
+      html += '<span>' + placeholder + '</span><span class="ms-arrow">▼</span></div>';
+      html += '<div class="ms-panel" id="ms_panel_' + key + '">';
+      options.forEach(function(opt) {
+        var isSelected = selected.includes(opt);
+        var isDisabled = disabledSet[opt] && !isSelected;
+        var cls = 'ms-option' + (isSelected ? ' selected' : '') + (isDisabled ? ' disabled' : '');
+        html += '<div class="' + cls + '" data-value="' + opt + '" onclick="toggleMsOption(\'' + key + '\', \'' + opt.replace(/'/g, "\\'") + '\')">';
+        html += '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' ' + (isDisabled ? 'disabled' : '') + ' tabindex="-1">';
+        html += '<label>' + opt + '</label></div>';
+      });
+      html += '<button type="button" class="ms-done-btn" onclick="closeMsPanel(\'' + key + '\')">Done</button></div>';
+      container.innerHTML = html;
+    }
+    
+    function toggleMsPanel(key) {
+      var panel = document.getElementById('ms_panel_' + key);
+      var container = document.getElementById('ms_' + key);
+      var trigger = container.querySelector('.ms-trigger');
+      var isOpen = panel.classList.contains('open');
+      closeAllMsPanels(key);
+      if (!isOpen) { panel.classList.add('open'); trigger.classList.add('open'); }
+    }
+    
+    function closeMsPanel(key) {
+      var panel = document.getElementById('ms_panel_' + key);
+      var container = document.getElementById('ms_' + key);
+      if (panel) panel.classList.remove('open');
+      var trigger = container ? container.querySelector('.ms-trigger') : null;
+      if (trigger) trigger.classList.remove('open');
+    }
+    
+    function closeAllMsPanels(exceptKey) {
+      Object.keys(msState).forEach(function(key) { if (key !== exceptKey) closeMsPanel(key); });
+    }
+    
+    function toggleMsOption(key, value) {
+      var container = document.getElementById('ms_' + key);
+      var noneOption = container ? container.dataset.noneOption : null;
+      var selected = msState[key] || [];
+      var idx = selected.indexOf(value);
+      if (idx > -1) {
+        selected.splice(idx, 1);
+      } else {
+        if (noneOption && value === noneOption) { msState[key] = [value]; }
+        else if (noneOption && selected.includes(noneOption)) { msState[key] = [value]; }
+        else { selected.push(value); }
+      }
+      renderMultiSelect(key);
+      var panel = document.getElementById('ms_panel_' + key);
+      var trigger = document.getElementById('ms_' + key).querySelector('.ms-trigger');
+      if (panel) panel.classList.add('open');
+      if (trigger) trigger.classList.add('open');
+      updateMsBadges(key);
+      updateMsHiddenInput(key);
+      if (container._onChangeCallback) container._onChangeCallback(msState[key]);
+    }
+    
+    function updateMsBadges(key) {
+      var badgesContainer = document.getElementById('badges_' + key);
+      var countContainer = document.getElementById('count_' + key);
+      var selected = msState[key] || [];
+      var trigger = document.querySelector('#ms_' + key + ' .ms-trigger');
+      if (trigger && selected.length > 0) trigger.style.borderColor = '#d1d5db';
+      checkAndDismissAlert();
+      if (badgesContainer) {
+        badgesContainer.innerHTML = '';
+        selected.forEach(function(val) {
+          var badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.innerHTML = val + ' <button type="button" class="badge-remove" onclick="removeMsValue(\'' + key + '\', \'' + val.replace(/'/g, "\\'") + '\')">&times;</button>';
+          badgesContainer.appendChild(badge);
+        });
+      }
+      if (countContainer) {
+        if (selected.length > 0) { countContainer.textContent = selected.length + ' selected'; countContainer.style.display = 'inline'; }
+        else { countContainer.textContent = ''; countContainer.style.display = 'none'; }
+      }
+    }
+    
+    function updateMsHiddenInput(key) {
+      var input = document.getElementById(key + '_values');
+      if (input) input.value = (msState[key] || []).join(', ');
+    }
+    
+    function removeMsValue(key, value) {
+      msState[key] = (msState[key] || []).filter(function(v) { return v !== value; });
+      renderMultiSelect(key);
+      updateMsBadges(key);
+      updateMsHiddenInput(key);
+      var container = document.getElementById('ms_' + key);
+      if (container && container._onChangeCallback) container._onChangeCallback(msState[key]);
+    }
+    
+    function clearMsValues(key) {
+      msState[key] = [];
+      renderMultiSelect(key);
+      updateMsBadges(key);
+      updateMsHiddenInput(key);
+    }
+    
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.ms-dropdown')) closeAllMsPanels();
+    });
+    
+    // ── Initialization ─────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeForm();
+    });
+    
+    function initializeForm() {
+      document.getElementById('joining_date').valueAsDate = new Date();
+      google.script.run.withSuccessHandler(populateDropdowns).withFailureHandler(handleError).getDropdownData();
+      setupEventListeners();
+      populateYearDropdowns();
+      populateYearJoinedAviation();
+      updateNavigation();
+      initStaticMultiSelects();
+    }
+
+    function populateYearJoinedAviation() {
+      var currentYear = new Date().getFullYear();
+      var yearSelect = document.getElementById('year_aviation');
+      for (var year = currentYear; year >= 1970; year--) {
+        var option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      }
+    }
+    
+    function initStaticMultiSelects() {
+      ['last', 'second_last', 'third_last'].forEach(function(suffix) {
+        initMultiSelect('section_' + suffix, SECTION_OPTIONS, '+ Add Section');
+        initMultiSelect('designation_' + suffix, DESIGNATION_EMP_OPTIONS, '+ Add Designation');
+      });
+      initMultiSelect('available_license', LICENSE_OPTIONS, '+ Add License', {
+        noneOption: 'None',
+        onChangeCallback: function() { toggleLicenseSections(); }
+      });
+      initMultiSelect('amel_category', AMEL_CATEGORY_OPTIONS, '+ Add Category', {
+        exclusions: AMEL_EXCLUSIONS,
+        onChangeCallback: function() { updateAmelTypeSections(); }
+      });
+    }
+    
+    function goToProfile() {
+      google.script.run
+        .withSuccessHandler(function(url) { window.top.location.href = url; })
+        .withFailureHandler(function() {
+          var baseUrl = window.location.href.split('?')[0].split('#')[0];
+          window.top.location.href = baseUrl;
+        })
+        .getScriptUrl();
+    }
+    
+    function populateYearDropdowns() {
+      var currentYear = new Date().getFullYear();
+      var yearSelect = document.getElementById('year_establish_year');
+      for (var year = currentYear; year >= 1970; year--) {
+        var option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      }
+    }
+    
+    function populateDropdowns(data) {
+      var userEmail = data.userEmail || '';
+      document.getElementById('email_display').textContent = userEmail;
+      document.getElementById('email_address').value = userEmail;
+      var nationalitySelect = document.getElementById('nationality');
+      data.nationalities.forEach(function(nationality) {
+        var option = document.createElement('option');
+        option.value = nationality;
+        option.textContent = nationality;
+        nationalitySelect.appendChild(option);
+      });
+      ['type_last', 'type_second_last', 'type_third_last'].forEach(function(key) {
+        initMultiSelect(key, data.typeRatings, '+ Add Type');
+      });
+      ['b1_type_rating', 'b2_type_rating', 'c_type_rating', 'a1_type_rating'].forEach(function(key) {
+        initMultiSelect(key, data.typeRatings, '+ Add Type', { noneOption: 'No Type Task Rating' });
+      });
+      window.typeRatings = data.typeRatings;
+    }
+    
+    // ── Event listeners ────────────────────────────────────────────────────
+    function setupEventListeners() {
+      document.getElementById('date_of_birth').addEventListener('change', calculateAge);
+      document.getElementById('year_aviation').addEventListener('change', calculateYearsInAviation);
+      
+      document.querySelectorAll('.circle-btn:not(.passport-btn)').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.circle-btn:not(.passport-btn)').forEach(function(b) { b.classList.remove('active'); });
+          this.classList.add('active');
+          document.getElementById('no_of_employment').value = this.dataset.value;
+          toggleEmploymentSections();
+        });
+      });
+      
+      document.getElementById('nationality').addEventListener('change', toggleIcSection);
+      document.getElementById('amtl_license_category').addEventListener('change', toggleAmtlTypeSection);
+      
+      ['last', 'second_last', 'third_last'].forEach(function(suffix) {
+        document.getElementById('start_date_' + suffix).addEventListener('change', function() { calculateEmploymentYears(suffix); });
+        document.getElementById('end_date_' + suffix).addEventListener('change', function() { calculateEmploymentYears(suffix); });
+      });
+      
+      document.getElementById('staff_no').addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 7); });
+      document.getElementById('phone_number').addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
+      document.getElementById('kin_phone_number').addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
+      
+      setupIcInputs();
+      
+      // ── File upload: size check + smart preview ──
+      ['ic_picture', 'amel_picture', 'amtl_picture', 'passport_picture'].forEach(function(id) {
+        document.getElementById(id).addEventListener('change', function() {
+          if (this.files && this.files[0]) {
+            var file = this.files[0];
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+              showAlert('File "' + file.name + '" is too large (' + (file.size / 1024 / 1024).toFixed(1) + 'MB). Maximum file size is ' + MAX_FILE_SIZE_MB + 'MB. Please compress or resize the file.', 'error');
+              this.value = '';
+              var previewId = id.replace('_picture', '_preview');
+              var preview = document.getElementById(previewId);
+              if (preview) { preview.innerHTML = ''; preview.className = ''; }
+              this.style.borderColor = '#dc2626';
+              return;
+            }
+            this.style.borderColor = '#d1d5db';
+          }
+          previewFile(id, id.replace('_picture', '_preview'));
+          checkAndDismissAlert();
+        });
+      });
+      
+      document.getElementById('year_establish_month').addEventListener('change', updateYearEstablishAndCalculateSigning);
+      document.getElementById('year_establish_year').addEventListener('change', updateYearEstablishAndCalculateSigning);
+      
+      document.querySelectorAll('.passport-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.passport-btn').forEach(function(b) { b.classList.remove('active'); });
+          this.classList.add('active');
+          document.getElementById('passport_available').value = this.dataset.value;
+          togglePassportSection();
+        });
+      });
+      
+      document.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], input[type="tel"], textarea').forEach(function(el) {
+        el.addEventListener('input', function() { if (this.value.trim()) this.style.borderColor = '#d1d5db'; checkAndDismissAlert(); });
+        el.addEventListener('change', function() { if (this.value.trim()) this.style.borderColor = '#d1d5db'; checkAndDismissAlert(); });
+      });
+      document.querySelectorAll('select').forEach(function(el) {
+        el.addEventListener('change', function() { if (this.value) this.style.borderColor = '#d1d5db'; checkAndDismissAlert(); });
+      });
+    }
+
+    // ── Smart file preview ─────────────────────────────────────────────────
+    // Shows a photo card for images, filename row for PDFs/HEIC
+    function previewFile(inputId, previewId) {
+      var input = document.getElementById(inputId);
+      var preview = document.getElementById(previewId);
+      if (!preview) return;
+
+      if (!input.files || !input.files[0]) {
+        preview.innerHTML = '';
+        preview.className = '';
+        return;
+      }
+
+      var file = input.files[0];
+      var isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      var isHeic = file.type === 'image/heic' || file.type === 'image/heif' ||
+                   file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+
+      if (isPdf || isHeic) {
+        // Show filename + size — no image decode attempted
+        var sizeText = (file.size / 1024 / 1024).toFixed(2) + 'MB';
+        var iconSvg = isPdf
+          ? '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+        preview.className = 'pdf-preview';
+        preview.innerHTML = iconSvg +
+          '<span class="pdf-preview-name">' + file.name + '</span>' +
+          '<span class="pdf-preview-size">' + sizeText + '</span>';
+      } else {
+        // Image — read and show thumbnail
+        preview.className = 'image-preview photo-preview';
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    // ── License section toggles ────────────────────────────────────────────
+    function toggleLicenseSections() {
+      var selected = msState['available_license'] || [];
+      var hasAMEL = selected.includes('CAAM AMEL (B/C)');
+      var hasAMTL = selected.includes('CAAM AMTL (A)');
+      var hasLicense = hasAMEL || hasAMTL;
+      document.getElementById('amel_section').classList.toggle('hidden', !hasAMEL);
+      document.getElementById('amtl_section').classList.toggle('hidden', !hasAMTL);
+      document.getElementById('year_section').classList.toggle('hidden', !hasLicense);
+      if (!hasAMEL) {
+        clearMsValues('amel_category');
+        ['amel_license','amel_issue_date','amel_license_expiry'].forEach(function(id) { document.getElementById(id).value = ''; });
+        document.getElementById('amel_picture').value = '';
+        var p = document.getElementById('amel_preview'); if (p) { p.innerHTML = ''; p.className = ''; }
+        updateAmelTypeSections();
+      }
+      if (!hasAMTL) {
+        ['amtl_license_category','amtl_license_no','amtl_issue_date','amtl_license_expiry'].forEach(function(id) { document.getElementById(id).value = ''; });
+        document.getElementById('amtl_picture').value = '';
+        var p = document.getElementById('amtl_preview'); if (p) { p.innerHTML = ''; p.className = ''; }
+        toggleAmtlTypeSection();
+      }
+      if (!hasLicense) {
+        document.getElementById('year_establish').value = '';
+        document.getElementById('year_establish_month').value = '';
+        document.getElementById('year_establish_year').value = '';
+      }
+    }
+    
+    function updateAmelTypeSections() {
+      var selected = msState['amel_category'] || [];
+      var hasB1 = selected.includes('B1.1') || selected.includes('B1.1 Limited');
+      var hasB2 = selected.includes('B2') || selected.includes('B2 Limited');
+      var hasCatC = selected.includes('Cat C');
+      document.getElementById('b1_type_section').classList.toggle('hidden', !hasB1);
+      document.getElementById('b2_type_section').classList.toggle('hidden', !hasB2);
+      document.getElementById('c_type_section').classList.toggle('hidden', !hasCatC);
+      if (!hasB1) clearMsValues('b1_type_rating');
+      if (!hasB2) clearMsValues('b2_type_rating');
+      if (!hasCatC) clearMsValues('c_type_rating');
+    }
+    
+    function toggleAmtlTypeSection() {
+      var hasA1 = document.getElementById('amtl_license_category').value === 'A1';
+      document.getElementById('a1_type_section').classList.toggle('hidden', !hasA1);
+      if (!hasA1) clearMsValues('a1_type_rating');
+    }
+    
+    function togglePassportSection() {
+      var isAvailable = document.getElementById('passport_available').value === 'Available';
+      document.getElementById('passport_details_section').classList.toggle('hidden', !isAvailable);
+      if (!isAvailable) {
+        ['passport_no','passport_expiry'].forEach(function(id) { document.getElementById(id).value = ''; });
+        document.getElementById('passport_picture').value = '';
+        var p = document.getElementById('passport_preview'); if (p) { p.innerHTML = ''; p.className = ''; }
+      }
+    }
+    
+    // ── Employment sections ────────────────────────────────────────────────
+    function toggleEmploymentSections() {
+      var count = parseInt(document.getElementById('no_of_employment').value) || 0;
+      document.getElementById('employment_1').classList.toggle('hidden', count < 1);
+      document.getElementById('employment_2').classList.toggle('hidden', count < 2);
+      document.getElementById('employment_3').classList.toggle('hidden', count < 3);
+      if (count < 1) clearEmploymentSection('last');
+      if (count < 2) clearEmploymentSection('second_last');
+      if (count < 3) clearEmploymentSection('third_last');
+    }
+    
+    function clearEmploymentSection(suffix) {
+      ['company_','start_date_','end_date_','year_'].forEach(function(pre) {
+        var el = document.getElementById(pre + suffix); if (el) el.value = '';
+      });
+      clearMsValues('section_' + suffix);
+      clearMsValues('designation_' + suffix);
+      clearMsValues('type_' + suffix);
+    }
+    
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function setupIcInputs() {
+      var icPart1 = document.getElementById('ic_part1');
+      var icPart2 = document.getElementById('ic_part2');
+      var icPart3 = document.getElementById('ic_part3');
+      icPart1.addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 6); if (this.value.length === 6) icPart2.focus(); updateIcNo(); });
+      icPart2.addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 2); if (this.value.length === 2) icPart3.focus(); updateIcNo(); });
+      icPart3.addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 4); updateIcNo(); });
+      icPart2.addEventListener('keydown', function(e) { if (e.key === 'Backspace' && this.value.length === 0) icPart1.focus(); });
+      icPart3.addEventListener('keydown', function(e) { if (e.key === 'Backspace' && this.value.length === 0) icPart2.focus(); });
+    }
+    
+    function updateIcNo() {
+      var p1 = document.getElementById('ic_part1').value;
+      var p2 = document.getElementById('ic_part2').value;
+      var p3 = document.getElementById('ic_part3').value;
+      document.getElementById('ic_no').value = (p1 && p2 && p3) ? p1 + '-' + p2 + '-' + p3 : '';
+    }
+    
+    function toggleIcSection() {
+      var nationality = document.getElementById('nationality').value;
+      var isMalaysia = nationality.toLowerCase() === 'malaysia' || nationality.toLowerCase() === 'malaysia';
+      document.getElementById('ic_section').classList.toggle('hidden', !isMalaysia);
+      if (!isMalaysia) {
+        ['ic_part1','ic_part2','ic_part3'].forEach(function(id) { document.getElementById(id).value = ''; });
+        document.getElementById('ic_no').value = '';
+        document.getElementById('ic_picture').value = '';
+        var p = document.getElementById('ic_preview'); if (p) { p.innerHTML = ''; p.className = ''; }
+      }
+    }
+    
+    function calculateAge() {
+      var dob = new Date(document.getElementById('date_of_birth').value);
+      var today = new Date();
+      var age = today.getFullYear() - dob.getFullYear();
+      var m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+      document.getElementById('age').value = age >= 0 ? age : '';
+    }
+    
+    function calculateYearsInAviation() {
+      var yearJoined = parseInt(document.getElementById('year_aviation').value);
+      if (!yearJoined) { document.getElementById('total_years_aviation').value = ''; return; }
+      var currentYear = new Date().getFullYear();
+      var total = currentYear - yearJoined;
+      document.getElementById('total_years_aviation').value = total >= 0 ? total : '';
+    }
+    
+    function calculateEmploymentYears(suffix) {
+      var start = new Date(document.getElementById('start_date_' + suffix).value);
+      var end = new Date(document.getElementById('end_date_' + suffix).value);
+      if (start && end && end > start) {
+        document.getElementById('year_' + suffix).value = ((end - start) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
+      }
+    }
+    
+    function updateYearEstablishAndCalculateSigning() {
+      var month = document.getElementById('year_establish_month').value;
+      var year = document.getElementById('year_establish_year').value;
+      document.getElementById('year_establish').value = (month && year) ? year + '-' + month : '';
+    }
+    
+    // ── Navigation & Validation ────────────────────────────────────────────
+    function navigate(direction) {
+      var newStep = currentStep + direction;
+      if (direction > 0 && !validateCurrentSection()) return;
+      if (newStep < 1 || newStep > totalSteps) {
+        if (newStep > totalSteps) showConfirmationDialog();
+        return;
+      }
+      currentStep = newStep;
+      updateSections();
+      updateProgress();
+      updateNavigation();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      hideAlert();
+    }
+    
+    function validateCurrentSection() {
+      var isValid = true;
+      var firstInvalid = null;
+      
+      if (currentStep === 1) {
+        ['full_name','staff_no','joining_date','date_of_birth','nationality','gender','designation','main_trade','year_aviation'].forEach(function(id) {
+          var field = document.getElementById(id);
+          if (!field.value.trim()) { isValid = false; field.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = field; }
+          else field.style.borderColor = '#d1d5db';
+        });
+        var phone = document.getElementById('phone_number');
+        if (!phone.value.trim()) { isValid = false; phone.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = phone; }
+        else phone.style.borderColor = '#d1d5db';
+        var nationality = document.getElementById('nationality').value;
+        var isMalaysia = nationality.toLowerCase() === 'malaysia' || nationality.toLowerCase() === 'malaysia';
+        if (isMalaysia) {
+          [['ic_part1',6],['ic_part2',2],['ic_part3',4]].forEach(function(spec) {
+            var el = document.getElementById(spec[0]);
+            if (el.value.length !== spec[1]) { isValid = false; el.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = el; }
+            else el.style.borderColor = '#d1d5db';
+          });
+          var icPic = document.getElementById('ic_picture');
+          if (!icPic.files || !icPic.files[0]) { isValid = false; icPic.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = icPic; }
+          else icPic.style.borderColor = '#d1d5db';
+        }
+      }
+      
+      if (currentStep === 2) {
+        var count = parseInt(document.getElementById('no_of_employment').value) || 0;
+        ['last','second_last','third_last'].slice(0, count).forEach(function(suffix) {
+          var company = document.getElementById('company_' + suffix);
+          if (!company.value.trim()) { isValid = false; company.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = company; }
+          else company.style.borderColor = '#d1d5db';
+          ['start_date_' + suffix, 'end_date_' + suffix].forEach(function(id) {
+            var field = document.getElementById(id);
+            if (!field.value) { isValid = false; field.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = field; }
+            else field.style.borderColor = '#d1d5db';
+          });
+          ['section_' + suffix, 'designation_' + suffix, 'type_' + suffix].forEach(function(key) {
+            var trigger = document.querySelector('#ms_' + key + ' .ms-trigger');
+            if (!msState[key] || msState[key].length === 0) { isValid = false; if (trigger) trigger.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = trigger; }
+            else if (trigger) trigger.style.borderColor = '#d1d5db';
+          });
+        });
+      }
+      
+      if (currentStep === 3) {
+        var licenseSelected = msState['available_license'] || [];
+        if (licenseSelected.length === 0) { showAlert('Please select at least one license option', 'error'); return false; }
+        var hasAMEL = licenseSelected.includes('CAAM AMEL (B/C)');
+        var hasAMTL = licenseSelected.includes('CAAM AMTL (A)');
+        var hasLicense = hasAMEL || hasAMTL;
+        if (hasAMEL) {
+          var t = document.querySelector('#ms_amel_category .ms-trigger');
+          if (!msState['amel_category'] || msState['amel_category'].length === 0) { isValid = false; if (t) t.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = t; }
+          else if (t) t.style.borderColor = '#d1d5db';
+          var amelLic = document.getElementById('amel_license');
+          if (!amelLic.value.trim()) { isValid = false; amelLic.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = amelLic; }
+          else amelLic.style.borderColor = '#d1d5db';
+          ['amel_issue_date','amel_license_expiry'].forEach(function(id) {
+            var f = document.getElementById(id);
+            if (!f.value) { isValid = false; f.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = f; }
+            else f.style.borderColor = '#d1d5db';
+          });
+          var amelCats = msState['amel_category'] || [];
+          if ((amelCats.includes('B1.1')||amelCats.includes('B1.1 Limited')) && (!msState['b1_type_rating']||msState['b1_type_rating'].length===0)) { isValid = false; var t2 = document.querySelector('#ms_b1_type_rating .ms-trigger'); if (t2) t2.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = t2; }
+          if ((amelCats.includes('B2')||amelCats.includes('B2 Limited')) && (!msState['b2_type_rating']||msState['b2_type_rating'].length===0)) { isValid = false; var t3 = document.querySelector('#ms_b2_type_rating .ms-trigger'); if (t3) t3.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = t3; }
+          if (amelCats.includes('Cat C') && (!msState['c_type_rating']||msState['c_type_rating'].length===0)) { isValid = false; var t4 = document.querySelector('#ms_c_type_rating .ms-trigger'); if (t4) t4.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = t4; }
+          var amelPic = document.getElementById('amel_picture');
+          if (!amelPic.files || !amelPic.files[0]) { isValid = false; amelPic.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = amelPic; }
+          else amelPic.style.borderColor = '#d1d5db';
+        }
+        if (hasAMTL) {
+          var amtlCat = document.getElementById('amtl_license_category');
+          if (!amtlCat.value) { isValid = false; amtlCat.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = amtlCat; }
+          else amtlCat.style.borderColor = '#d1d5db';
+          var amtlNo = document.getElementById('amtl_license_no');
+          if (!amtlNo.value.trim()) { isValid = false; amtlNo.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = amtlNo; }
+          else amtlNo.style.borderColor = '#d1d5db';
+          ['amtl_issue_date','amtl_license_expiry'].forEach(function(id) {
+            var f = document.getElementById(id);
+            if (!f.value) { isValid = false; f.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = f; }
+            else f.style.borderColor = '#d1d5db';
+          });
+          if (amtlCat.value === 'A1' && (!msState['a1_type_rating']||msState['a1_type_rating'].length===0)) { isValid = false; var t5 = document.querySelector('#ms_a1_type_rating .ms-trigger'); if (t5) t5.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = t5; }
+          var amtlPic = document.getElementById('amtl_picture');
+          if (!amtlPic.files || !amtlPic.files[0]) { isValid = false; amtlPic.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = amtlPic; }
+          else amtlPic.style.borderColor = '#d1d5db';
+        }
+        if (hasLicense) {
+          var ym = document.getElementById('year_establish_month');
+          var yy = document.getElementById('year_establish_year');
+          if (!ym.value) { isValid = false; ym.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = ym; } else ym.style.borderColor = '#d1d5db';
+          if (!yy.value) { isValid = false; yy.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = yy; } else yy.style.borderColor = '#d1d5db';
+        }
+      }
+      
+      if (currentStep === 4) {
+        ['address','state','next_of_kin_name','relationship'].forEach(function(id) {
+          var field = document.getElementById(id);
+          if (!field.value.trim()) { isValid = false; field.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = field; }
+          else field.style.borderColor = '#d1d5db';
+        });
+        var kinPhone = document.getElementById('kin_phone_number');
+        if (!kinPhone.value.trim()) { isValid = false; kinPhone.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = kinPhone; }
+        else kinPhone.style.borderColor = '#d1d5db';
+        if (document.getElementById('passport_available').value === 'Available') {
+          ['passport_no','passport_expiry'].forEach(function(id) {
+            var f = document.getElementById(id);
+            if (!f.value.trim()) { isValid = false; f.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = f; }
+            else f.style.borderColor = '#d1d5db';
+          });
+          var passportPic = document.getElementById('passport_picture');
+          if (!passportPic.files || !passportPic.files[0]) { isValid = false; passportPic.style.borderColor = '#dc2626'; if (!firstInvalid) firstInvalid = passportPic; }
+          else passportPic.style.borderColor = '#d1d5db';
+        }
+      }
+      
+      if (!isValid) {
+        showAlert('Please fill in all required fields', 'error');
+        if (firstInvalid && firstInvalid.focus) firstInvalid.focus();
+      }
+      return isValid;
+    }
+    
+    function updateSections() {
+      document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+      document.querySelector('.section[data-section="' + currentStep + '"]').classList.add('active');
+    }
+    
+    function updateProgress() {
+      document.querySelectorAll('.progress-step').forEach(function(step, index) {
+        var num = index + 1;
+        step.classList.remove('active', 'completed');
+        if (num < currentStep) step.classList.add('completed');
+        else if (num === currentStep) step.classList.add('active');
+      });
+      document.querySelectorAll('.progress-line').forEach(function(line, index) {
+        line.classList.toggle('completed', index < currentStep - 1);
+      });
+    }
+    
+    function updateNavigation() {
+      var prevBtn = document.getElementById('prevBtn');
+      var nextBtn = document.getElementById('nextBtn');
+      prevBtn.style.display = currentStep === 1 ? 'none' : 'flex';
+      if (currentStep === totalSteps) { nextBtn.textContent = 'Submit'; nextBtn.classList.remove('btn-primary'); nextBtn.classList.add('btn-success'); }
+      else { nextBtn.innerHTML = 'Next →'; nextBtn.classList.remove('btn-success'); nextBtn.classList.add('btn-primary'); }
+    }
+    
+    // ── Form submission ────────────────────────────────────────────────────
+    function collectFormData() {
+      var form = document.getElementById('registrationForm');
+      var formData = {};
+      form.querySelectorAll('input, select, textarea').forEach(function(input) {
+        if (input.type === 'file') return;
+        if (input.closest('.ms-dropdown')) return;
+        if (input.id && input.id.startsWith('ic_part')) return;
+        if (input.name) formData[input.name] = input.value;
+      });
+      formData.phone_no = '+60' + document.getElementById('phone_number').value;
+      formData.next_of_kin_contact_no = '+60' + document.getElementById('kin_phone_number').value;
+      formData.email_address = document.getElementById('email_address').value;
+      formData.age = document.getElementById('age').value;
+      formData.ic_no = document.getElementById('ic_no').value;
+      ['type_last','type_second_last','type_third_last','section_last','section_second_last','section_third_last',
+       'designation_last','designation_second_last','designation_third_last',
+       'available_license','amel_category','b1_type_rating','b2_type_rating','c_type_rating','a1_type_rating'].forEach(function(key) {
+        formData[key] = document.getElementById(key + '_values').value;
+      });
+      formData.year_last = document.getElementById('year_last').value;
+      formData.year_second_last = document.getElementById('year_second_last').value;
+      formData.year_third_last = document.getElementById('year_third_last').value;
+      return formData;
+    }
+    
+    function getPictureBase64(inputId) {
+      return new Promise(function(resolve) {
+        var input = document.getElementById(inputId);
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) { resolve(e.target.result); };
+          reader.readAsDataURL(input.files[0]);
+        } else {
+          resolve('');
+        }
+      });
+    }
+    
+    function handleSuccess(result) {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      if (result.success) {
+        document.getElementById('registrationForm').style.display = 'none';
+        document.querySelector('.progress-container').style.display = 'none';
+        document.querySelector('.form-header').style.display = 'none';
+        document.getElementById('successScreen').classList.add('show');
+        document.getElementById('navButtons').style.display = 'none';
+      } else {
+        document.getElementById('navButtons').style.display = 'flex';
+        showAlert(result.message, 'error');
+      }
+    }
+    
+    function handleError(error) {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      document.getElementById('navButtons').style.display = 'flex';
+      showAlert('Error: ' + (error.message || error), 'error');
+    }
+    
+    function showAlert(message, type) {
+      var alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = 'alert alert-' + type;
+      alertBox.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function hideAlert() { document.getElementById('alertBox').style.display = 'none'; }
+
+    // ── Confirmation dialog ────────────────────────────────────────────────
+    async function showConfirmationDialog() {
+      if (!validateCurrentSection()) return;
+      var formData = collectFormData();
+      formData.ic_picture_base64      = await getPictureBase64('ic_picture');
+      formData.amel_picture_base64    = await getPictureBase64('amel_picture');
+      formData.amtl_picture_base64    = await getPictureBase64('amtl_picture');
+      formData.passport_picture_base64 = await getPictureBase64('passport_picture');
+      
+      var html = '<div class="confirmation-dialog-overlay" id="confirmationOverlay">';
+      html += '<div class="confirmation-dialog">';
+      html += '<div class="confirmation-header"><h2>Confirm Your Registration</h2><p>Please review your information before submitting:</p></div>';
+      html += '<div class="confirmation-body">';
+      html += '<div class="confirm-section"><h3>Personal Information</h3>';
+      html += '<div class="confirm-row"><label>Full Name:</label><span>' + (formData.full_name || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Email:</label><span>' + (formData.email_address || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Staff No:</label><span>' + (formData.staff_no || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>IC No:</label><span>' + (formData.ic_no || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Date of Birth:</label><span>' + (formData.date_of_birth || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Nationality:</label><span>' + (formData.nationality || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Gender:</label><span>' + (formData.gender || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Phone:</label><span>' + (formData.phone_no || '-') + '</span></div>';
+      html += '<div class="confirm-row"><label>Designation:</label><span>' + (formData.designation || '-') + '</span></div>';
+      html += '</div>';
+      var empCount = parseInt(formData.no_of_employment) || 0;
+      if (empCount > 0) {
+        html += '<div class="confirm-section"><h3>Employment History (' + empCount + ' previous employment' + (empCount > 1 ? 's' : '') + ')</h3>';
+        [['last','Most Recent'],['second_last','2nd'],['third_last','3rd']].slice(0, empCount).forEach(function(pair) {
+          var s = pair[0], label = pair[1];
+          if (formData['company_' + s]) {
+            html += '<div class="confirm-employment"><strong>' + label + ' Employment:</strong><br>Company: ' + (formData['company_' + s] || '-') + '<br>Section: ' + (formData['section_' + s] || '-') + '<br>Period: ' + (formData['start_date_' + s] || '-') + ' to ' + (formData['end_date_' + s] || '-') + '</div>';
+          }
+        });
+        html += '</div>';
+      }
+      if (formData.available_license && formData.available_license !== 'None') {
+        html += '<div class="confirm-section"><h3>CAAM License</h3>';
+        html += '<div class="confirm-row"><label>License Type:</label><span>' + (formData.available_license || '-') + '</span></div>';
+        if (formData.available_license.indexOf('AMEL') !== -1) {
+          html += '<div class="confirm-row"><label>AMEL Category:</label><span>' + (formData.amel_category || '-') + '</span></div>';
+          html += '<div class="confirm-row"><label>AMEL No:</label><span>' + (formData.amel_license || '-') + '</span></div>';
+          html += '<div class="confirm-row"><label>AMEL Expiry:</label><span>' + (formData.amel_license_expiry || '-') + '</span></div>';
+        }
+        if (formData.available_license.indexOf('AMTL') !== -1) {
+          html += '<div class="confirm-row"><label>AMTL No:</label><span>' + (formData.amtl_license_no || '-') + '</span></div>';
+          html += '<div class="confirm-row"><label>AMTL Expiry:</label><span>' + (formData.amtl_license_expiry || '-') + '</span></div>';
+        }
+        html += '</div>';
+      }
+      html += '<div class="confirm-section"><h3>Documents Uploaded</h3>';
+      var docs = [];
+      if (formData.ic_picture_base64) docs.push('IC');
+      if (formData.amel_picture_base64) docs.push('AMEL License');
+      if (formData.amtl_picture_base64) docs.push('AMTL License');
+      if (formData.passport_picture_base64) docs.push('Passport');
+      html += '<div class="confirm-row"><label>Files:</label><span>' + (docs.length > 0 ? docs.join(', ') : 'None') + '</span></div>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="confirmation-footer">';
+      html += '<button type="button" class="btn-confirm-cancel" onclick="closeConfirmation()">Cancel</button>';
+      html += '<button type="button" class="btn btn-primary" onclick="confirmSubmission()">Confirm &amp; Submit</button>';
+      html += '</div></div></div>';
+      
+      document.body.insertAdjacentHTML('beforeend', html);
+      window._pendingFormData = formData;
+    }
+
+    function closeConfirmation() {
+      var overlay = document.getElementById('confirmationOverlay');
+      if (overlay) overlay.remove();
+      window._pendingFormData = null;
+    }
+
+    function confirmSubmission() {
+      var formData = window._pendingFormData;
+      if (!formData) { showAlert('Error: Form data not found', 'error'); return; }
+      closeConfirmation();
+      document.getElementById('loadingOverlay').classList.add('show');
+      document.getElementById('navButtons').style.display = 'none';
+      google.script.run
+        .withSuccessHandler(handleSuccess)
+        .withFailureHandler(handleError)
+        .submitForm(formData);
+    }
+    
+    function checkAndDismissAlert() {
+      var alertBox = document.getElementById('alertBox');
+      if (alertBox.style.display === 'none') return;
+      var allValid = true;
+      if (currentStep === 1) {
+        ['full_name','staff_no','joining_date','date_of_birth','nationality','gender','designation','main_trade','year_aviation'].forEach(function(id) { if (!document.getElementById(id).value.trim()) allValid = false; });
+        if (!document.getElementById('phone_number').value.trim()) allValid = false;
+        var nat = document.getElementById('nationality').value;
+        var isMY = nat.toLowerCase() === 'malaysia' || nat.toLowerCase() === 'malaysia';
+        if (isMY) {
+          if (document.getElementById('ic_part1').value.length !== 6) allValid = false;
+          if (document.getElementById('ic_part2').value.length !== 2) allValid = false;
+          if (document.getElementById('ic_part3').value.length !== 4) allValid = false;
+          var icPicEl = document.getElementById('ic_picture');
+          if (!icPicEl.files || !icPicEl.files[0]) allValid = false;
+        }
+      }
+      if (currentStep === 2) {
+        var count = parseInt(document.getElementById('no_of_employment').value) || 0;
+        ['last','second_last','third_last'].slice(0, count).forEach(function(s) {
+          if (!document.getElementById('company_' + s).value.trim()) allValid = false;
+          if (!document.getElementById('start_date_' + s).value) allValid = false;
+          if (!document.getElementById('end_date_' + s).value) allValid = false;
+          ['section_' + s,'designation_' + s,'type_' + s].forEach(function(key) { if (!msState[key]||msState[key].length===0) allValid = false; });
+        });
+      }
+      if (currentStep === 3) {
+        var lic = msState['available_license'] || [];
+        if (lic.length === 0) { allValid = false; }
+        var hasAMEL = lic.includes('CAAM AMEL (B/C)');
+        var hasAMTL = lic.includes('CAAM AMTL (A)');
+        if (hasAMEL) {
+          if (!msState['amel_category']||msState['amel_category'].length===0) allValid = false;
+          if (!document.getElementById('amel_license').value.trim()) allValid = false;
+          if (!document.getElementById('amel_issue_date').value) allValid = false;
+          if (!document.getElementById('amel_license_expiry').value) allValid = false;
+          var amelPicEl = document.getElementById('amel_picture'); if (!amelPicEl.files||!amelPicEl.files[0]) allValid = false;
+          var cats = msState['amel_category']||[];
+          if ((cats.includes('B1.1')||cats.includes('B1.1 Limited'))&&(!msState['b1_type_rating']||msState['b1_type_rating'].length===0)) allValid=false;
+          if ((cats.includes('B2')||cats.includes('B2 Limited'))&&(!msState['b2_type_rating']||msState['b2_type_rating'].length===0)) allValid=false;
+          if (cats.includes('Cat C')&&(!msState['c_type_rating']||msState['c_type_rating'].length===0)) allValid=false;
+        }
+        if (hasAMTL) {
+          if (!document.getElementById('amtl_license_category').value) allValid = false;
+          if (!document.getElementById('amtl_license_no').value.trim()) allValid = false;
+          if (!document.getElementById('amtl_issue_date').value) allValid = false;
+          if (!document.getElementById('amtl_license_expiry').value) allValid = false;
+          var amtlPicEl = document.getElementById('amtl_picture'); if (!amtlPicEl.files||!amtlPicEl.files[0]) allValid = false;
+          if (document.getElementById('amtl_license_category').value==='A1'&&(!msState['a1_type_rating']||msState['a1_type_rating'].length===0)) allValid=false;
+        }
+        if (hasAMEL||hasAMTL) {
+          if (!document.getElementById('year_establish_month').value) allValid=false;
+          if (!document.getElementById('year_establish_year').value) allValid=false;
+        }
+      }
+      if (currentStep === 4) {
+        ['address','state','next_of_kin_name','relationship'].forEach(function(id) { if (!document.getElementById(id).value.trim()) allValid=false; });
+        if (!document.getElementById('kin_phone_number').value.trim()) allValid=false;
+        if (document.getElementById('passport_available').value==='Available') {
+          if (!document.getElementById('passport_no').value.trim()) allValid=false;
+          if (!document.getElementById('passport_expiry').value) allValid=false;
+          var passportPicEl=document.getElementById('passport_picture'); if (!passportPicEl.files||!passportPicEl.files[0]) allValid=false;
+        }
+      }
+      if (allValid) hideAlert();
+    }
+    
+    // ── Expose to global scope ─────────────────────────────────────────────
+    window.navigate = navigate;
+    window.goToProfile = goToProfile;
+    window.toggleMsPanel = toggleMsPanel;
+    window.toggleMsOption = toggleMsOption;
+    window.closeMsPanel = closeMsPanel;
+    window.removeMsValue = removeMsValue;
+    window.showConfirmationDialog = showConfirmationDialog;
+    window.closeConfirmation = closeConfirmation;
+    window.confirmSubmission = confirmSubmission;
+    
+  })();
+  </script>
+</body>
+</html>
